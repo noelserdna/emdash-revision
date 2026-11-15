@@ -258,3 +258,100 @@ export async function editarCambio(
 	}
 	return { cambio: { ...nuevo, id: input.id }, revision, doc: guardada.doc };
 }
+
+/**
+ * La revisora edita ella misma un párrafo, el título o el extracto, sin pasar
+ * por un comentario. Queda como un cambio suyo ya dado por bueno.
+ */
+export async function editarBloque(
+	env: Entorno,
+	user: Usuario,
+	input: { collection: string; id: string; campo: "content" | "title" | "excerpt"; blockKey?: string; texto: string },
+): Promise<void> {
+	const { ctx } = env;
+	const { cambios } = collections(ctx);
+	const rev = await leerRevision(ctx, input.collection, input.id);
+	// Si ese párrafo ya tiene un cambio en esta vuelta, se edita ese cambio.
+	const deVuelta = await cambiosDeVuelta(env, input.collection, input.id, rev.vuelta);
+	const previo = deVuelta.find(
+		(c) => c.campo === input.campo && (input.campo !== "content" || c.blockKey === input.blockKey) && c.veredicto !== "deshecho" && c.op !== "eliminar",
+	);
+	if (previo) {
+		await editarCambio(env, user, { id: previo.id, texto: input.texto });
+		return;
+	}
+	const texto = input.texto.replace(/\s*\n+\s*/g, " ").trim();
+	if (!texto) throw PluginRouteError.badRequest("Escribe el texto como quieres que quede.");
+	const entrada = await leerParaAnclar(env, input.collection, input.id);
+	let nuevoDoc: DocRevisable;
+	let antes: CambioDoc["antes"];
+	let despues: CambioDoc["despues"];
+	if (input.campo === "title" || input.campo === "excerpt") {
+		const prop = input.campo === "title" ? "titulo" : "extracto";
+		antes = entrada.doc[prop] ?? "";
+		despues = texto;
+		nuevoDoc = { ...entrada.doc, [prop]: texto };
+	} else {
+		const i = entrada.doc.content.findIndex((n) => n._key === input.blockKey);
+		const actual = entrada.doc.content[i];
+		if (i < 0 || !actual) throw PluginRouteError.conflict("El texto ha cambiado. Recarga el artículo.");
+		if (!esBloque(actual)) throw PluginRouteError.badRequest("Las tablas y las imágenes no se editan aquí. Deja un comentario.");
+		const children = reescribirSpans(actual.children ?? [], texto, nuevaClave);
+		const usadas = new Set(children.flatMap((s) => s.marks ?? []));
+		const bloque: PTBlock = { ...actual, children, markDefs: (actual.markDefs ?? []).filter((d) => usadas.has(d._key)) };
+		if (textoDeBloque(bloque) !== texto) throw PluginRouteError.badRequest("No se ha podido guardar ese texto. Prueba de nuevo.");
+		const content = [...entrada.doc.content];
+		content[i] = bloque;
+		antes = actual;
+		despues = bloque;
+		nuevoDoc = { ...entrada.doc, content };
+	}
+	const antesTexto = textoDeCambio(antes);
+	if (antesTexto === texto) return;
+	const guardada = await escribirDoc(env, entrada, nuevoDoc, "Antes de una edición de la revisora");
+	const doc: CambioDoc = {
+		collection: input.collection,
+		entryId: entrada.id,
+		vuelta: rev.vuelta,
+		trabajoId: null,
+		orden: Date.now(),
+		op: input.campo === "content" ? "reemplazar" : "campo",
+		campo: input.campo,
+		blockKey: input.campo === "content" ? (input.blockKey ?? null) : null,
+		trasKey: null,
+		antes,
+		despues,
+		comentarioIds: [],
+		avisos: [],
+		veredicto: "bien",
+		nota: "Redacción de la revisora",
+		veredictoPor: user.id,
+		creado: nowIso(),
+	};
+	await cambios.put(nuevoId(), doc);
+	await recalcular(ctx, input.collection, entrada.id, {
+		anularAprobacion: true,
+		extra: (r) => {
+			r.hash = guardada.hash;
+			if (r.aprobacion && r.aprobacion.hash !== guardada.hash) r.aprobacion.cambiadoDespues = true;
+		},
+	});
+	await auditar(ctx, {
+		accion: "veredicto",
+		userId: user.id,
+		collection: input.collection,
+		entryId: entrada.id,
+		hash: guardada.hash,
+		detalle: `edición directa de ${input.campo}${input.blockKey ? ` ${input.blockKey}` : ""}`,
+	});
+	await registrarSenal(env, autorDe(user), {
+		tipo: "edicion",
+		collection: input.collection,
+		entryId: entrada.id,
+		titulo: guardada.doc.titulo,
+		campo: input.campo,
+		antes: antesTexto,
+		despues: texto,
+		nota: "Lo reescribió ella en el panel de revisión",
+	});
+}

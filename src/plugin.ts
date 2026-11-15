@@ -30,7 +30,7 @@ import {
 	retirarAprendizaje,
 	senalDeEdicion,
 } from "./lib/aprendizaje.js";
-import { darVeredicto, editarCambio } from "./lib/cambios.js";
+import { darVeredicto, editarBloque, editarCambio } from "./lib/cambios.js";
 import {
 	aplicarComentario,
 	borrarComentario,
@@ -52,6 +52,7 @@ import { importarPreguntas, responderPregunta } from "./lib/preguntas.js";
 import { leerRevision, purgarEntrada, sincronizar } from "./lib/revisiones.js";
 import { allRows, collections, nowIso, nuevoId, STORAGE } from "./lib/store.js";
 import {
+	corregirComentarioYa,
 	aplicarPendiente,
 	articuloDeTrabajo,
 	cancelar,
@@ -110,6 +111,7 @@ const ajustesSchema = z.object({
 	rolAprueba: z.number().int().min(10).max(50).optional(),
 	requiereAprobacion: z.boolean().optional(),
 	motorHeTerminado: motorSchema.optional(),
+	corregirAlComentar: z.boolean().optional(),
 	adminNombre: z.string().max(120).optional(),
 	avisarA: z.string().max(320).optional(),
 	terminosSensibles: z.string().max(5000).optional(),
@@ -307,6 +309,21 @@ export function createPlugin(options: RevisionPluginOptions): ResolvedPlugin {
 		),
 		"cambios/veredicto": memberRoute(schemas.veredicto, async (ctx) =>
 			darVeredicto(entorno(ctx), requireUser(ctx), ctx.input),
+		),
+		"comentarios/corregir": memberRoute(schemas.id, async (ctx) => {
+			const env = entorno(ctx);
+			const user = requireUser(ctx);
+			const r = await corregirComentarioYa(env, user, ctx.input.id);
+			return articulo(env, user, r.collection, r.entryId);
+		}),
+		"bloque/editar": memberRoute(
+			ref.extend({ campo: z.enum(["content", "title", "excerpt"]), blockKey: z.string().max(100).optional(), texto: z.string().min(1).max(20_000) }),
+			async (ctx) => {
+				const env = entorno(ctx);
+				const user = requireUser(ctx);
+				await editarBloque(env, user, ctx.input);
+				return articulo(env, user, ctx.input.collection, ctx.input.id);
+			},
 		),
 		"cambios/editar": memberRoute(z.object({ id: idSimple, texto: z.string().min(1).max(20_000) }), async (ctx) =>
 			editarCambio(entorno(ctx), requireUser(ctx), ctx.input),

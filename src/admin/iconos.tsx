@@ -8,6 +8,7 @@ export type NombreIcono =
 	| IconoEtiqueta
 	| "mas"
 	| "cerrar"
+	| "lapiz"
 	| "externo"
 	| "publicado"
 	| "libro"
@@ -25,6 +26,7 @@ const TRAZOS: Record<NombreIcono, string> = {
 	reloj: "M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM12 7v5l3 2",
 	mas: "M5 12h.01M12 12h.01M19 12h.01",
 	cerrar: "M6 6l12 12M18 6L6 18",
+	lapiz: "M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4",
 	externo: "M14 4h6v6M20 4l-9 9M18 14v6H4V6h6",
 	publicado: "M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18",
 	libro: "M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19V5",

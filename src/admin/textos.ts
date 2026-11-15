@@ -150,6 +150,17 @@ export const T = {
 	tamanoMenos: "Letra más pequeña",
 	tamanoMas: "Letra más grande",
 	tamanoActual: (pct: number) => `Tamaño de letra: ${pct} %`,
+	editarParrafo: "Editar",
+	editarUnidad: (nombre: string, n: number | null) => `Editar ${nombre}${n ? ` ${n}` : ""}`,
+	editarTitulo: "Editar el texto",
+	editarSobre: "Vas a editar:",
+	corrigiendoYa: (n: number) =>
+		n > 1
+			? `La IA está corrigiendo ${n} párrafos con tus comentarios. Puedes seguir leyendo y comentando.`
+			: "La IA está corrigiendo el párrafo con tu comentario. Suele tardar menos de un minuto; puedes seguir leyendo y comentando.",
+	corregidoYa: "Ya está corregido: mira el cambio.",
+	corregirYaError: (motivo: string) => `No se ha podido corregir ahora (${motivo}). Tu comentario está guardado y se corregirá al pulsar «He terminado».`,
+	ajCorregirAlComentar: "Corregir cada comentario al momento con la API, sin esperar a «He terminado»",
 	editarCambio: "Editar",
 	editarCambioEtq: "Escríbelo como quieres que quede",
 	editarCambioAyuda: "Cambia solo el texto: las negritas y los enlaces de lo que no toques se conservan. Al guardar queda como tú lo has escrito.",

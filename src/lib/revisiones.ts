@@ -103,7 +103,10 @@ export async function recalcular(
 	opts: { anularAprobacion?: boolean; extra?: (r: RevisionDoc) => void } = {},
 ): Promise<RevisionDoc> {
 	const actual = await leerRevision(ctx, collection, entryId);
-	const n = await contar(ctx, actual);
+	// Los contadores se calculan ya con lo que `extra` vaya a cambiar (p. ej. la vuelta).
+	const previsto: RevisionDoc = { ...actual };
+	opts.extra?.(previsto);
+	const n = await contar(ctx, previsto);
 	return cambiarRevision(ctx, collection, entryId, (r) => {
 		opts.extra?.(r);
 		if (opts.anularAprobacion && r.estado === "aprobado" && n.abiertos > 0) {

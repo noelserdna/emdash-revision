@@ -193,6 +193,10 @@ function PaginaAjustes() {
 							</label>
 						))}
 					</fieldset>
+					<label className="rv-check">
+						<input type="checkbox" checked={form.corregirAlComentar} onChange={(e) => poner("corregirAlComentar", e.target.checked)} />
+						<span>{T.ajCorregirAlComentar}</span>
+					</label>
 					<fieldset className="rv-radios">
 						<legend>{T.ajRol}</legend>
 						{[40, 50].map((r) => (

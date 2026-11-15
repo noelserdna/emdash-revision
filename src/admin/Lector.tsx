@@ -63,6 +63,8 @@ interface ContextoLectorValor {
 	foco: string | null;
 	setFoco: (id: string) => void;
 	onComentar: (ref: RefUnidad, origen: HTMLElement) => void;
+	/** La revisora edita ella el texto de la unidad (si se ofrece). */
+	onEditar?: (ref: RefUnidad, origen: HTMLElement) => void;
 	onVerComentarios: (unidad: string, origen: HTMLElement) => void;
 	cambiosPorBloque: Map<string, CambioVista>;
 	eliminadosTras: Map<string, CambioVista[]>;
@@ -204,6 +206,7 @@ function Unidad({
 	bloque,
 	children,
 	extra,
+	editar,
 }: {
 	como: Etiqueta;
 	refU: RefUnidad;
@@ -216,6 +219,8 @@ function Unidad({
 	bloque?: string;
 	children: React.ReactNode;
 	extra?: Record<string, unknown>;
+	/** aria-label del botón «Editar», si la unidad es texto que se puede reescribir. */
+	editar?: string;
 }) {
 	const ctx = React.useContext(ContextoLector);
 	const Tag = como as React.ElementType;
@@ -263,6 +268,18 @@ function Unidad({
 				>
 					<Icono nombre="comentario" />
 				</button>
+				{editar && ctx.onEditar ? (
+					<button
+						type="button"
+						className="rv-comentar rv-comentar--editar"
+						aria-label={editar}
+						title={T.editarParrafo}
+						tabIndex={-1}
+						onClick={(e) => ctx.onEditar?.(refU, e.currentTarget)}
+					>
+						<Icono nombre="lapiz" />
+					</button>
+				) : null}
 				{n > 0 ? (
 					<button
 						type="button"
@@ -333,6 +350,7 @@ function BloqueTexto({ node, num }: { node: PTBlock; num: Numeracion }) {
 			etiqueta={T.comentarUnidad(nombre, num.n)}
 			donde={T.dondeEste(nombre)}
 			bloque={node._key}
+			editar={T.editarUnidad(nombre, num.n)}
 		>
 			<TextoSpans spans={node.children ?? []} markDefs={node.markDefs ?? []} unidad={unidad} />
 		</Unidad>
@@ -550,7 +568,7 @@ function BloqueTextoConHijos({ item, num, hijos }: { item: ItemLista; num: Numer
 	const refU: RefUnidad = { campo: "content", blockKey: item.node._key };
 	const nombre = nombreTipo(num.tipo);
 	return (
-		<Unidad como="li" refU={refU} etiqueta={T.comentarUnidad(nombre, num.n)} donde={T.dondeEste(nombre)} bloque={item.node._key}>
+		<Unidad como="li" refU={refU} etiqueta={T.comentarUnidad(nombre, num.n)} donde={T.dondeEste(nombre)} bloque={item.node._key} editar={T.editarUnidad(nombre, num.n)}>
 			<TextoSpans spans={item.node.children ?? []} markDefs={item.node.markDefs ?? []} unidad={idUnidad(refU)} />
 			{hijos}
 		</Unidad>
@@ -716,6 +734,7 @@ export interface PropsLector {
 	marcada: string | null;
 	onMarcar: (unidad: string | null) => void;
 	onComentar: (ref: RefUnidad, origen: HTMLElement) => void;
+	onEditar?: (ref: RefUnidad, origen: HTMLElement) => void;
 	onComentarSeleccion: (s: SeleccionLector, origen: HTMLElement) => void;
 	onVerComentarios: (unidad: string, origen: HTMLElement) => void;
 	cambiosPorBloque: Map<string, CambioVista>;
@@ -747,13 +766,14 @@ export function Lector(p: PropsLector) {
 			foco,
 			setFoco,
 			onComentar: p.onComentar,
+			onEditar: p.onEditar,
 			onVerComentarios: p.onVerComentarios,
 			cambiosPorBloque: p.cambiosPorBloque,
 			eliminadosTras: p.eliminadosTras,
 			cambiosCampo: p.cambiosCampo,
 			renderCambio: p.renderCambio,
 		}),
-		[p.marcas, p.marcada, foco, p.onComentar, p.onVerComentarios, p.cambiosPorBloque, p.eliminadosTras, p.cambiosCampo, p.renderCambio],
+		[p.marcas, p.marcada, foco, p.onComentar, p.onEditar, p.onVerComentarios, p.cambiosPorBloque, p.eliminadosTras, p.cambiosCampo, p.renderCambio],
 	);
 
 	// Píldora «Comentar» al seleccionar texto con ratón o trackpad.
@@ -851,6 +871,7 @@ export function Lector(p: PropsLector) {
 							refU={refTitulo}
 							etiqueta={T.comentarUnidad(T.tipoTituloArticulo, null)}
 							donde={T.tipoTituloArticulo}
+							editar={T.editarUnidad(T.tipoTituloArticulo, null)}
 						>
 							<TextoPlano texto={p.doc.titulo} unidad={idUnidad(refTitulo)} />
 						</Unidad>
@@ -864,6 +885,7 @@ export function Lector(p: PropsLector) {
 							className="rv-extracto"
 							etiqueta={T.comentarUnidad(T.tipoExtracto, null)}
 							donde={T.tipoExtracto}
+							editar={T.editarUnidad(T.tipoExtracto, null)}
 						>
 							<span className="rv-etq-campo">{T.extracto}</span>
 							<TextoPlano texto={p.doc.extracto} unidad={idUnidad(refExtracto)} />

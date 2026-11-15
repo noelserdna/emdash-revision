@@ -110,6 +110,9 @@ export const api = {
 	estadoComentario: (b: { id: string; estado: "abierto" | "descartado" }) =>
 		llamar<{ comentario: ComentarioVista; revision: RevisionDoc }>("comentarios/estado", b),
 	borrarComentario: (id: string) => llamar<{ ok: true; revision: RevisionDoc }>("comentarios/borrar", { id }),
+	corregirComentario: (id: string) => llamar<ArticuloVista>("comentarios/corregir", { id }),
+	editarBloque: (b: Clave & { campo: "content" | "title" | "excerpt"; blockKey?: string; texto: string }) =>
+		llamar<ArticuloVista>("bloque/editar", b),
 	aplicarComentario: (id: string) => llamar<ArticuloVista>("comentarios/aplicar", { id }),
 	responderPregunta: (b: { reglaId: string; tipo: "correcto" | "quitar" | "cambiar" | "luego"; texto?: string }) =>
 		llamar<{ pregunta: PreguntaVista }>("preguntas/responder", b),

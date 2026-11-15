@@ -95,6 +95,8 @@ export interface OpcionesTrabajo {
 	modelo?: ModeloId | null;
 	esfuerzo?: Esfuerzo | null;
 	completa?: boolean;
+	/** Corrección al momento de solo estos comentarios: no se programa, la ejecuta quien la crea. */
+	soloComentarios?: string[];
 }
 
 async function programar(ctx: PluginContext, trabajoId: string): Promise<void> {
@@ -136,6 +138,7 @@ export async function crearTrabajo(
 		modelo: opts.motor === "api" ? (opts.modelo ?? ajustes.modeloDefecto) : (opts.modelo ?? null),
 		esfuerzo: opts.motor === "api" ? (opts.esfuerzo ?? ajustes.esfuerzo) : (opts.esfuerzo ?? null),
 		completa: !!opts.completa,
+		soloComentarios: opts.soloComentarios?.length ? opts.soloComentarios : null,
 		vuelta: rev.vuelta,
 		baseDraftRevisionId: entrada.draftRevisionId,
 		baseHash: entrada.hash,
@@ -151,7 +154,7 @@ export async function crearTrabajo(
 	};
 	const id = nuevoId();
 	await collections(ctx).trabajos.put(id, data);
-	if (opts.motor === "api") {
+	if (opts.motor === "api" && !data.soloComentarios) {
 		try {
 			await programar(ctx, id);
 		} catch (error) {
@@ -208,7 +211,7 @@ export async function terminar(env: Entorno, user: Usuario, collection: string, 
 
 // ─── Entrada para la IA ────────────────────────────────────────────
 
-function comentariosParaIA(coms: Array<{ id: string; data: ComentarioDoc }>): ComentarioParaIA[] {
+function comentariosParaIA(coms: Array<{ id: string; data: ComentarioDoc }>, solo?: string[] | null): ComentarioParaIA[] {
 	const hijos = new Map<string, string[]>();
 	for (const { data } of coms) {
 		if (!data.parentId) continue;
@@ -217,7 +220,7 @@ function comentariosParaIA(coms: Array<{ id: string; data: ComentarioDoc }>): Co
 		hijos.set(data.parentId, lista);
 	}
 	return coms
-		.filter((c) => esAbiertoPrincipal(c.data))
+		.filter((c) => esAbiertoPrincipal(c.data) && (!solo || solo.includes(c.id)))
 		.map(({ id, data }) => {
 			const respuestas = hijos.get(id);
 			const texto = respuestas?.length ? `${data.texto}\n\nRespuestas:\n${respuestas.map((r) => `- ${r}`).join("\n")}` : data.texto;
@@ -269,7 +272,7 @@ export async function construirEntrada(
 			extracto: e.doc.extracto,
 			referencias: e.doc.referencias,
 			bloques: bloquesParaIA(e.doc.content),
-			comentarios: comentariosParaIA(coms),
+			comentarios: comentariosParaIA(coms, t.soloComentarios),
 			guias: guias.map((g) => ({ nombre: g.data.nombre, markdown: g.data.markdown })),
 			reglas: reglas
 				.filter((r) => r.data.respuesta && r.data.respuesta.tipo !== "luego")
@@ -406,14 +409,18 @@ export async function entregar(
 
 	const ajustes = await leerAjustes(ctx);
 	const coms = await comentariosDe(ctx, t.collection, t.entryId);
-	const abiertos = coms.filter((c) => esAbiertoPrincipal(c.data));
+	const solo = t.soloComentarios?.length ? t.soloComentarios : null;
+	const abiertos = coms.filter((c) => esAbiertoPrincipal(c.data) && (!solo || solo.includes(c.id)));
 	const res = aplicarOps(entrada.doc, salida.ops, {
 		comentarios: abiertos.map((c) => ({ id: c.id, ancla: c.data.ancla })),
 		completa: t.completa,
 		terminosSensibles: terminosSensibles(ajustes),
 	});
 	const rev = await leerRevision(ctx, t.collection, t.entryId);
-	const vuelta = rev.vuelta + 1;
+	// Una corrección al momento se suma a la vuelta que la revisora ya está viendo.
+	const mismaVuelta = !!solo && rev.estado === "cambios_por_ver" && rev.vuelta > 0;
+	const vuelta = mismaVuelta ? rev.vuelta : rev.vuelta + 1;
+	const ordenBase = solo ? Date.now() : 0;
 	const guardada = res.cambios.length
 		? await escribirDoc(env, entrada, res.doc, `Antes de la corrección de la IA (vuelta ${vuelta})`)
 		: entrada;
@@ -426,7 +433,7 @@ export async function entregar(
 			entryId: t.entryId,
 			vuelta,
 			trabajoId,
-			orden: i,
+			orden: ordenBase + i,
 			veredicto: "pendiente",
 			nota: null,
 			veredictoPor: null,
@@ -484,7 +491,7 @@ export async function entregar(
 		detalle: `${trabajoId}: ${res.cambios.length} cambio(s), ${res.rechazadas.length} rechazada(s)`,
 	});
 
-	const quien = await buscarUsuario(ctx, t.creadoPor);
+	const quien = solo ? null : await buscarUsuario(ctx, t.creadoPor);
 	if (quien && quien.role < 50) {
 		const titulo = guardada.doc.titulo || t.entryId;
 		await enviarCorreo(ctx, {
@@ -555,6 +562,7 @@ export async function ejecutarTrabajoApi(env: Entorno, trabajoId: string): Promi
 			baseDraftRevisionId: draftRevisionId,
 			latido: nowIso(),
 		});
+		if (t.soloComentarios && entrada.comentarios.length === 0) return await fallar("Ese comentario ya está resuelto.");
 		const r = await corregirConApi(entrada, {
 			apiKey,
 			modelo: t.modelo ?? ajustes.modeloDefecto,
@@ -564,6 +572,18 @@ export async function ejecutarTrabajoApi(env: Entorno, trabajoId: string): Promi
 		const actual = await trabajos.get(trabajoId);
 		if (actual?.estado === "cancelado") return;
 		await trabajos.put(trabajoId, { ...(actual ?? t), usage: r.usage, costeEstimado: r.coste, latido: nowIso() });
+		if (t.soloComentarios) {
+			// Mientras tanto la revisora ha podido tocar otros párrafos: se aplica sobre el
+			// texto actual, pero solo en los bloques que siguen como se enviaron.
+			const enviados = new Map(entrada.bloques.map((b) => [b.key, b.markdown]));
+			const ahora = new Map(bloquesParaIA((await leerParaAnclar(env, t.collection, t.entryId)).doc.content).map((b) => [b.key, b.markdown]));
+			const salida = r.salida as { ops?: Array<{ blockKey?: string }> };
+			if (Array.isArray(salida.ops)) {
+				salida.ops = salida.ops.filter((op) => !op.blockKey || enviados.get(op.blockKey) === ahora.get(op.blockKey));
+			}
+			await entregar(env, trabajoId, salida, { usage: r.usage, coste: r.coste, modelo: r.modelo, forzarBase: true });
+			return;
+		}
 		await entregar(env, trabajoId, r.salida, { usage: r.usage, coste: r.coste, modelo: r.modelo });
 	} catch (error) {
 		const mensaje =
@@ -575,3 +595,24 @@ export async function ejecutarTrabajoApi(env: Entorno, trabajoId: string): Promi
 	}
 }
 
+
+/**
+ * Corrige al momento un comentario recién guardado: crea un trabajo solo para él
+ * y lo ejecuta en la misma petición. La revisora ve el cambio en cuanto termina.
+ */
+export async function corregirComentarioYa(env: Entorno, user: Usuario, comentarioId: string): Promise<{ collection: string; entryId: string }> {
+	const { ctx } = env;
+	const c = await collections(ctx).comentarios.get(comentarioId);
+	if (!c) throw PluginRouteError.notFound("No se encuentra el comentario.");
+	const raiz = c.parentId ? await collections(ctx).comentarios.get(c.parentId) : c;
+	const id = c.parentId ?? comentarioId;
+	if (!raiz || !esAbiertoPrincipal(raiz)) throw PluginRouteError.conflict("Ese comentario ya está resuelto.");
+	const ajustes = await leerAjustes(ctx);
+	if (!ajustes.corregirAlComentar) throw PluginRouteError.badRequest("La corrección al momento está desactivada.");
+	// Rápida: es un párrafo con una indicación concreta.
+	const t = await crearTrabajo(env, user, raiz.collection, raiz.entryId, { motor: "api", esfuerzo: "medium", soloComentarios: [id] });
+	await ejecutarTrabajoApi(env, t.id);
+	const fin = await collections(ctx).trabajos.get(t.id);
+	if (fin?.estado === "error") throw PluginRouteError.badRequest(fin.error ?? "No se ha podido corregir.");
+	return { collection: raiz.collection, entryId: raiz.entryId };
+}

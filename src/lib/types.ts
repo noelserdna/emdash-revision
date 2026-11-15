@@ -206,6 +206,8 @@ export interface TrabajoDoc {
 	esfuerzo: Esfuerzo | null;
 	/** Reescritura completa (solo administrador). */
 	completa: boolean;
+	/** Corrección al momento de solo estos comentarios (la lanza el panel al guardar uno). */
+	soloComentarios?: string[] | null;
 	vuelta: number;
 	baseDraftRevisionId: string | null;
 	baseHash: string | null;
@@ -385,6 +387,8 @@ export interface Ajustes {
 	requiereAprobacion: boolean;
 	/** Qué hace «He terminado»: dejar en cola para Claude Code o lanzar la API. */
 	motorHeTerminado: Motor;
+	/** Corregir con la API cada comentario nada más guardarlo, sin esperar a «He terminado». */
+	corregirAlComentar: boolean;
 	/** Nombre que se muestra a la revisora como responsable técnico. */
 	adminNombre: string;
 	/** Correo al que avisar cuando la revisora termina un artículo. */
@@ -416,6 +420,7 @@ export const AJUSTES_DEFECTO: Ajustes = {
 	rolAprueba: 40,
 	requiereAprobacion: false,
 	motorHeTerminado: "local",
+	corregirAlComentar: true,
 	adminNombre: "El administrador",
 	avisarA: "",
 	terminosSensibles: "",
@@ -444,6 +449,8 @@ export interface ConfigVista {
 	adminNombre: string;
 	motorHeTerminado: Motor;
 	apiDisponible: boolean;
+	/** Cada comentario se corrige con la IA al guardarlo. */
+	corregirAlComentar: boolean;
 	requiereAprobacion: boolean;
 }
 

@@ -198,7 +198,14 @@ td.rv-u--comentada::before, th.rv-u--comentada::before, td.rv-u--activa::before,
 .rv-margen{ position: absolute; left: -3rem; top: 0; display: flex; flex-direction: column; gap: 0.25rem; align-items: center; font-family: system-ui, sans-serif; font-size: calc(0.8125rem * var(--rv-escala, 1)); line-height: 1; }
 td > .rv-margen, th > .rv-margen, .rv-figura__textos .rv-margen{ position: static; flex-direction: row; display: inline-flex; margin-left: 0.375rem; vertical-align: middle; }
 .rv-comentar{ width: 2.75rem; height: 2.75rem; border-radius: 999px; border: 1px solid var(--rv-line); background: var(--rv-bg); color: var(--rv-muted); display: inline-grid; place-items: center; opacity: 0; transition: opacity 150ms, background-color 150ms; }
+.rv-comentar{ pointer-events: none; }
+.rv-comentar:focus-visible, .rv-u--marcada > .rv-margen .rv-comentar, .rv-u--marcada > * > .rv-margen .rv-comentar{ pointer-events: auto; }
+@media (hover: hover){ .rv-u:hover > .rv-margen .rv-comentar, .rv-u:hover > * > .rv-margen .rv-comentar{ pointer-events: auto; } }
 .rv-comentar:hover{ background: var(--rv-surface); color: var(--rv-text); }
+.rv-franja--ia{ display: flex; gap: 0.625rem; align-items: center; }
+.rv-giro{ width: 1.125rem; height: 1.125rem; flex: none; border-radius: 999px; border: 2px solid var(--rv-line); border-top-color: var(--rv-brand); animation: rv-giro 0.9s linear infinite; }
+@keyframes rv-giro{ to{ transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce){ .rv-giro{ animation: none; } }
 .rv-comentar:focus-visible, .rv-u--marcada > .rv-margen .rv-comentar, .rv-u--marcada > * > .rv-margen .rv-comentar{ opacity: 1; }
 @media (hover: hover){
   .rv-u:hover > .rv-margen .rv-comentar, .rv-u:hover > * > .rv-margen .rv-comentar{ opacity: 1; }

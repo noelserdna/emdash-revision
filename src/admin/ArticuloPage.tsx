@@ -25,6 +25,7 @@ import { Aviso, AvisoError, ESCALAS, EtiquetaPublicacion, EtiquetaRevision, fech
 import { DialogoAprobar, DialogoIA, DialogoPublicar } from "./DialogosArticulo.js";
 import { DialogoHistorial } from "./Historial.js";
 import { useHojaFuentes } from "./estilos.js";
+import { EditorParrafo } from "./EditorParrafo.js";
 import { HojaInferior } from "./HojaInferior.js";
 import { Icono } from "./iconos.js";
 import { type BandejaLector, claveBandeja, esImagen, esTabla, Lector, type MarcasUnidad, nombreTipo, numerar, type SeleccionLector } from "./Lector.js";
@@ -123,8 +124,51 @@ function Articulo() {
 	/** Unidad cuyos comentarios se muestran debajo de su párrafo (pantalla ancha). */
 	const [hilo, setHilo] = React.useState<string | null>(null);
 	const [escala, setEscala] = useEscala();
+	/** Párrafo que la revisora está reescribiendo ella. */
+	const [editor, setEditor] = React.useState<{ clave: number; ref: RefUnidad; texto: string; origen: HTMLElement | null } | null>(null);
+	/** Comentarios que la IA está corrigiendo al momento (el primero) o que esperan turno. */
+	const [colaIA, setColaIA] = React.useState<string[]>([]);
+	const procesandoIA = React.useRef(false);
+	const vistaRef = React.useRef<ArticuloVista | null>(null);
+	const compositorRef = React.useRef(false);
 	// Al abrirse, la bandeja se trae a la vista sin mover el párrafo de su sitio.
-	const claveVisible = compositor ? `c${compositor.clave}` : hilo;
+	const claveVisible = editor ? `e${editor.clave}` : compositor ? `c${compositor.clave}` : hilo;
+	vistaRef.current = vista;
+	compositorRef.current = !!compositor || !!editor;
+
+	// Corrección al momento: de uno en uno, en el orden en que se comentó.
+	const actual = colaIA[0];
+	React.useEffect(() => {
+		if (!actual || procesandoIA.current) return;
+		procesandoIA.current = true;
+		void (async () => {
+			try {
+				const antes = new Set((vistaRef.current?.cambios ?? []).map((c) => c.id));
+				const v = await api.corregirComentario(actual);
+				setVista(v);
+				anunciar(T.corregidoYa);
+				const nuevo = v.cambios.find((c) => !antes.has(c.id) && c.comentarioIds.includes(actual)) ?? v.cambios.find((c) => !antes.has(c.id));
+				// No se le quita el sitio si está escribiendo otra cosa.
+				if (nuevo && !compositorRef.current) {
+					window.setTimeout(() => {
+						const h = document.getElementById(`rv-cambio-h-${nuevo.id}`);
+						h?.closest(".rv-cambio")?.scrollIntoView({ block: "center", behavior: "smooth" });
+					}, 150);
+				}
+			} catch (e) {
+				alertar(T.corregirYaError(mensajeDe(e)));
+			} finally {
+				procesandoIA.current = false;
+				setColaIA((q) => q.filter((x) => x !== actual));
+			}
+		})();
+	}, [actual, anunciar, alertar]);
+	const corregirYa = (ids: string[]) => {
+		const cfg = vistaRef.current?.config;
+		if (!cfg?.corregirAlComentar || !cfg.apiDisponible || ids.length === 0) return;
+		setColaIA((q) => [...q, ...ids.filter((x) => !q.includes(x))]);
+	};
+
 	React.useEffect(() => {
 		if (!claveVisible) return;
 		const id = window.requestAnimationFrame(() => {
@@ -461,6 +505,7 @@ function Articulo() {
 		contadorComp.current += 1;
 		setMarcada(null);
 		setCompositor({ clave: contadorComp.current, objetivo, origen, ...extra });
+		setEditor(null);
 		setHilo(null);
 		// En pantalla ancha el formulario se abre debajo del párrafo; en estrecha, en la hoja.
 		setHoja(!ancho);
@@ -481,6 +526,24 @@ function Articulo() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[unidades, ancho],
 	);
+
+	const onEditar = React.useCallback(
+		(ref: RefUnidad, origen: HTMLElement) => {
+			const doc = vistaRef.current?.articulo.doc;
+			if (!doc) return;
+			contadorComp.current += 1;
+			setCompositor(null);
+			setHilo(null);
+			setMarcada(null);
+			setEditor({ clave: contadorComp.current, ref, texto: textoDeUnidad(doc, ref) ?? "", origen });
+		},
+		[],
+	);
+	const cerrarEditor = () => {
+		const o = editor?.origen;
+		setEditor(null);
+		if (o && o.isConnected) o.focus();
+	};
 
 	const onComentarSeleccion = React.useCallback(
 		(s: SeleccionLector, origen: HTMLElement) => {
@@ -547,6 +610,8 @@ function Articulo() {
 			};
 		});
 		if (veredicto !== "bien" && !res.doc) void cargar();
+		// «No es esto» con explicación: la IA lo reintenta al momento.
+		if (veredicto === "no_es_esto") corregirYa(c.comentarioIds);
 		window.requestAnimationFrame(() => {
 			if (veredicto === "bien" && siguientePendiente) {
 				irACambio(siguientePendiente);
@@ -814,12 +879,13 @@ function Articulo() {
 						recuperado={compositor.recuperado}
 						aviso={compositor.aviso}
 						onCancelar={cerrarCompositor}
-						onGuardado={(c, r) => {
+						onGuardado={(c, r, yaAplicado) => {
 							actualizarComentario(c);
 							setVista((v) => (v ? { ...v, revision: r } : v));
 							setActivo(c.id);
 							anunciar(T.comentarioGuardado);
 							cerrarCompositor();
+							if (!yaAplicado && c.tipo !== "pregunta") corregirYa([c.parentId ?? c.id]);
 						}}
 						onAplicado={(v) => {
 							setVista(v);
@@ -886,7 +952,35 @@ function Articulo() {
 	const anclaHilo = hilo ? resueltas.get(marcas.get(hilo)?.comentarios[0]?.id ?? "")?.ancla : undefined;
 	const bandeja: BandejaLector | null = !ancho
 		? null
-		: compositor && refBandeja
+		: editor
+			? {
+					clave: claveBandeja(editor.ref),
+					nodo: (
+						<EditorParrafo
+							key={editor.clave}
+							descripcion={unidades.get(idUnidad(editor.ref))?.desc ?? ""}
+							inicial={editor.texto}
+							ocupado={ocupado}
+							onCancelar={cerrarEditor}
+							onGuardar={async (texto) => {
+								const res = await ejecutar(() =>
+									api.editarBloque({
+										...clave,
+										campo: editor.ref.campo as "content" | "title" | "excerpt",
+										blockKey: editor.ref.blockKey,
+										texto,
+									}),
+								);
+								if (!res) return false;
+								setVista(res);
+								setEditor(null);
+								anunciar(T.cambioEditado);
+								return true;
+							}}
+						/>
+					),
+				}
+			: compositor && refBandeja
 			? { clave: claveBandeja(refBandeja), nodo: formulario }
 			: hilo && anclaHilo && !compositor
 				? {
@@ -1019,6 +1113,16 @@ function Articulo() {
 				</div>
 
 				{franja ? <div className="rv-franja">{franja}</div> : null}
+				{colaIA.length ? (
+					<div className="rv-franja">
+						<Aviso tono="info">
+							<p className="rv-franja--ia">
+								<span className="rv-giro" aria-hidden="true" />
+								{T.corrigiendoYa(colaIA.length)}
+							</p>
+						</Aviso>
+					</div>
+				) : null}
 
 				{aprobadoListo ? (
 					<div style={{ marginBottom: "1rem" }}>
@@ -1093,6 +1197,7 @@ function Articulo() {
 							marcada={marcada}
 							onMarcar={setMarcada}
 							onComentar={onComentar}
+							onEditar={ancho ? onEditar : undefined}
 							onComentarSeleccion={onComentarSeleccion}
 							onVerComentarios={onVerComentarios}
 							cambiosPorBloque={enSegunda ? mapasCambios.porBloque : VACIO_CAMBIOS}

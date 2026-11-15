@@ -34,7 +34,8 @@ export interface PropsCompositor {
 	inicial?: { texto: string; propuesto: string; fragmento: string };
 	recuperado?: boolean;
 	aviso?: string | null;
-	onGuardado: (c: ComentarioVista, r: RevisionDoc) => void;
+	/** `yaAplicado`: se ha usado «Cambiarlo ya» y no hace falta la IA. */
+	onGuardado: (c: ComentarioVista, r: RevisionDoc, yaAplicado?: boolean) => void;
 	onAplicado: (v: ArticuloVista) => void;
 	onCancelar: () => void;
 	/** Encabezado de nivel 2 (panel) o 3 (dentro de la hoja). */
@@ -129,7 +130,7 @@ export function Compositor(p: PropsCompositor) {
 			});
 			borrarBorrador(p.collection, p.id);
 			if (cambiarYa) {
-				p.onGuardado(res.comentario, res.revision);
+				p.onGuardado(res.comentario, res.revision, true);
 				const vista = await api.aplicarComentario(res.comentario.id);
 				p.onAplicado(vista);
 			} else p.onGuardado(res.comentario, res.revision);
