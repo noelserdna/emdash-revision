@@ -386,7 +386,15 @@ export interface Ajustes {
 	avisarA: string;
 	/** Farmacos u otros términos sensibles extra, separados por comas. */
 	terminosSensibles: string;
+	/** Copias del texto que se guardan por artículo antes de cada cambio (historial). */
+	copiasCambios: number;
+	/** Copias de lo publicado que se guardan por artículo antes de cada publicación. */
+	copiasPublicaciones: number;
 }
+
+/** Límites admitidos para las copias del historial. */
+export const COPIAS_MIN = 1;
+export const COPIAS_MAX = 100;
 
 export const AJUSTES_DEFECTO: Ajustes = {
 	modeloDefecto: "claude-opus-5-5",
@@ -398,6 +406,8 @@ export const AJUSTES_DEFECTO: Ajustes = {
 	adminNombre: "El administrador",
 	avisarA: "",
 	terminosSensibles: "",
+	copiasCambios: 20,
+	copiasPublicaciones: 5,
 };
 
 // ─── Vistas (respuestas de las rutas; las consume el panel) ──────────────────
@@ -555,6 +565,8 @@ export interface HistorialVista {
 	publicaciones: VersionVista[];
 	actual: { hash: string };
 	publicada: { hash: string } | null;
+	/** Cuántas copias se guardan de cada tipo (ajustes). */
+	limites: { cambios: number; publicaciones: number };
 }
 
 export interface VersionDetalle {

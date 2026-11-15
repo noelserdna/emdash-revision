@@ -6,7 +6,7 @@
 
 import * as React from "react";
 
-import type { Ajustes, AjustesVista, Esfuerzo, ModeloId, Motor } from "../lib/types.js";
+import { COPIAS_MAX, COPIAS_MIN, type Ajustes, type AjustesVista, type Esfuerzo, type ModeloId, type Motor } from "../lib/types.js";
 import { api, esSinPermiso, urlInicio } from "./api.js";
 import { Aviso, AvisoError, Raiz, useAnuncio } from "./comun.js";
 import { Preferencias } from "./InicioPage.js";
@@ -225,6 +225,47 @@ function PaginaAjustes() {
 							onChange={(e) => poner("terminosSensibles", e.target.value)}
 						/>
 						<small id={f("terminos-ayuda")}>{T.ajTerminosAyuda}</small>
+					</div>
+				</section>
+
+				<section className="rv-tarjeta" aria-labelledby={f("t-versiones")}>
+					<h2 id={f("t-versiones")}>{T.ajVersiones}</h2>
+					<p className="rv-ayuda" style={{ margin: 0 }}>
+						{T.ajVersionesAyuda}
+					</p>
+					<div className="rv-rejilla">
+						<div className="rv-campo">
+							<label htmlFor={f("copias-cambios")}>{T.ajCopiasCambios}</label>
+							<input
+								id={f("copias-cambios")}
+								type="number"
+								min={COPIAS_MIN}
+								max={COPIAS_MAX}
+								step={1}
+								inputMode="numeric"
+								className="rv-input"
+								aria-describedby={f("copias-cambios-ayuda")}
+								value={form.copiasCambios}
+								onChange={(e) => poner("copiasCambios", Math.min(COPIAS_MAX, Math.max(COPIAS_MIN, Math.round(Number(e.target.value) || COPIAS_MIN))))}
+							/>
+							<small id={f("copias-cambios-ayuda")}>{T.ajCopiasCambiosAyuda}</small>
+						</div>
+						<div className="rv-campo">
+							<label htmlFor={f("copias-publicaciones")}>{T.ajCopiasPublicaciones}</label>
+							<input
+								id={f("copias-publicaciones")}
+								type="number"
+								min={COPIAS_MIN}
+								max={COPIAS_MAX}
+								step={1}
+								inputMode="numeric"
+								className="rv-input"
+								aria-describedby={f("copias-publicaciones-ayuda")}
+								value={form.copiasPublicaciones}
+								onChange={(e) => poner("copiasPublicaciones", Math.min(COPIAS_MAX, Math.max(COPIAS_MIN, Math.round(Number(e.target.value) || COPIAS_MIN))))}
+							/>
+							<small id={f("copias-publicaciones-ayuda")}>{T.ajCopiasPublicacionesAyuda}</small>
+						</div>
 					</div>
 				</section>
 

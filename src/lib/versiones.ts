@@ -5,7 +5,8 @@
  * - «cambio»: el texto ANTERIOR a cada escritura (del plugin o del editor).
  * - «publicacion»: lo que estaba publicado antes de publicar otra cosa.
  *
- * Se guardan como mucho `MAX_VERSIONES` por artículo y por tipo; al guardar la
+ * Se guardan como mucho las copias que digan los ajustes (`copiasCambios`, 20 por
+ * defecto; `copiasPublicaciones`, 5 por defecto) por artículo y tipo; al guardar la
  * siguiente se borra la más antigua de ese tipo. No se guarda una copia igual
  * (mismo hash) que la más reciente de su tipo.
  *
@@ -20,7 +21,13 @@ import { canonico, hashDoc } from "./hash.js";
 import { allRows, collections, nuevoId } from "./store.js";
 import type { BloqueComparado, DocRevisable, PTNode, ResumenVersion, TipoVersion, VersionDoc, VersionVista } from "./types.js";
 
-export const MAX_VERSIONES = 5;
+import { leerAjustes } from "./ajustes.js";
+
+/** Cuántas copias se guardan de cada tipo según los ajustes. */
+export async function limitesDeCopias(ctx: PluginContext): Promise<{ cambios: number; publicaciones: number }> {
+	const a = await leerAjustes(ctx);
+	return { cambios: a.copiasCambios, publicaciones: a.copiasPublicaciones };
+}
 
 export interface NuevaVersion {
 	collection: string;
@@ -75,7 +82,9 @@ export async function guardarVersion(ctx: PluginContext, v: NuevaVersion): Promi
 	};
 	const { versiones } = collections(ctx);
 	await versiones.put(id, doc);
-	const sobran = previas.slice(MAX_VERSIONES - 1).map((r) => r.id);
+	const limites = await limitesDeCopias(ctx);
+	const maximo = v.tipo === "cambio" ? limites.cambios : limites.publicaciones;
+	const sobran = previas.slice(maximo - 1).map((r) => r.id);
 	if (sobran.length) await versiones.deleteMany(sobran);
 	return id;
 }

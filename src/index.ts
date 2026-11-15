@@ -45,6 +45,16 @@ export interface RevisionPluginOptions {
 	claveApi?: string;
 	/** Locale de fechas. Por defecto "es-ES". */
 	locale?: string;
+	/**
+	 * Copias del historial de versiones que se guardan por artículo (valores por
+	 * defecto; se pueden cambiar después en Ajustes de revisión). Entre 1 y 100.
+	 */
+	versiones?: {
+		/** Copias del texto antes de cada cambio. Por defecto 20. */
+		cambios?: number;
+		/** Copias de lo publicado antes de cada publicación. Por defecto 5. */
+		publicaciones?: number;
+	};
 }
 
 export type * from "./lib/types.js";

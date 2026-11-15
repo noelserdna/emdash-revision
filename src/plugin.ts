@@ -10,7 +10,7 @@ import { z } from "astro/zod";
 
 import type { RevisionPluginOptions } from "./index.js";
 import { requireUser } from "./lib/acceso.js";
-import { gastoDelMes, guardarAjustes, leerAjustes, leerClaveApi } from "./lib/ajustes.js";
+import { fijarDefectos, gastoDelMes, guardarAjustes, leerAjustes, leerClaveApi } from "./lib/ajustes.js";
 import { aprobar, guardarLectura, publicar, retirar } from "./lib/aprobacion.js";
 import { darVeredicto } from "./lib/cambios.js";
 import {
@@ -46,7 +46,7 @@ import {
 	trabajoVista,
 	ultimoTrabajo,
 } from "./lib/trabajos.js";
-import type { AjustesVista, GuiaDoc } from "./lib/types.js";
+import { COPIAS_MAX, COPIAS_MIN, type AjustesVista, type GuiaDoc } from "./lib/types.js";
 import { articulo, inicio } from "./lib/vistas.js";
 import { PLUGIN_ID, VERSION } from "./version.js";
 
@@ -95,6 +95,8 @@ const ajustesSchema = z.object({
 	adminNombre: z.string().max(120).optional(),
 	avisarA: z.string().max(320).optional(),
 	terminosSensibles: z.string().max(5000).optional(),
+	copiasCambios: z.number().int().min(COPIAS_MIN).max(COPIAS_MAX).optional(),
+	copiasPublicaciones: z.number().int().min(COPIAS_MIN).max(COPIAS_MAX).optional(),
 });
 
 const schemas = {
@@ -179,6 +181,7 @@ export function createPlugin(options: RevisionPluginOptions): ResolvedPlugin {
 	if (!options?.collections || Object.keys(options.collections).length === 0) {
 		throw new Error("[emdash-revision] falta `collections` (p. ej. revisionPlugin({ collections: { posts: {} } })).");
 	}
+	fijarDefectos(options);
 	/** Escrituras propias del plugin pendientes de reconocer en `content:afterSave`. */
 	const propias = new Set<string>();
 	const entorno = (ctx: PluginContext): Entorno => ({

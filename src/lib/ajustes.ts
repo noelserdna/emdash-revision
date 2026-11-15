@@ -5,13 +5,34 @@
 
 import type { PluginContext } from "emdash";
 
-import { AJUSTES_DEFECTO, type Ajustes } from "./types.js";
+import { AJUSTES_DEFECTO, COPIAS_MAX, COPIAS_MIN, type Ajustes } from "./types.js";
 
 const CLAVE_AJUSTES = "ajustes";
 
+/** Valores por defecto: los del plugin, con lo que se pase en `revisionPlugin({ versiones })`. */
+let defectos: Ajustes = { ...AJUSTES_DEFECTO };
+
+/** Fija los valores por defecto de las copias a partir de las opciones del plugin. */
+export function fijarDefectos(opciones: { versiones?: { cambios?: number; publicaciones?: number } } | undefined): void {
+	defectos = {
+		...AJUSTES_DEFECTO,
+		copiasCambios: limiteCopias(opciones?.versiones?.cambios, AJUSTES_DEFECTO.copiasCambios),
+		copiasPublicaciones: limiteCopias(opciones?.versiones?.publicaciones, AJUSTES_DEFECTO.copiasPublicaciones),
+	};
+}
+
+/** Número de copias válido (entero entre COPIAS_MIN y COPIAS_MAX), o el valor de reserva. */
+export function limiteCopias(valor: unknown, reserva: number): number {
+	const n = typeof valor === "number" && Number.isFinite(valor) ? Math.round(valor) : reserva;
+	return Math.min(COPIAS_MAX, Math.max(COPIAS_MIN, n));
+}
+
 export async function leerAjustes(ctx: PluginContext): Promise<Ajustes> {
 	const guardados = await ctx.kv.get<Partial<Ajustes>>(CLAVE_AJUSTES);
-	return { ...AJUSTES_DEFECTO, ...(guardados ?? {}) };
+	const a = { ...defectos, ...(guardados ?? {}) };
+	a.copiasCambios = limiteCopias(a.copiasCambios, defectos.copiasCambios);
+	a.copiasPublicaciones = limiteCopias(a.copiasPublicaciones, defectos.copiasPublicaciones);
+	return a;
 }
 
 export async function guardarAjustes(ctx: PluginContext, cambios: Partial<Ajustes>): Promise<Ajustes> {

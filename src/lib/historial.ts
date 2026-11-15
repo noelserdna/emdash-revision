@@ -24,7 +24,7 @@ import { hashDoc } from "./hash.js";
 import { auditar, leerRevision, reanclar, recalcular } from "./revisiones.js";
 import { collections } from "./store.js";
 import type { Aprobacion, HistorialVista, VersionDetalle, VersionDoc } from "./types.js";
-import { compararDocs, guardarVersion, resumenDe, versionesDe, versionVista } from "./versiones.js";
+import { compararDocs, guardarVersion, limitesDeCopias, resumenDe, versionesDe, versionVista } from "./versiones.js";
 
 export const MOTIVO_RESTAURAR = "Antes de restaurar una versión";
 export const MOTIVO_EDITOR = "Antes de una edición en el editor";
@@ -71,6 +71,7 @@ export async function listarVersiones(env: Entorno, input: { collection: string;
 		publicaciones: vista(await versionesDe(env.ctx, input.collection, entrada.id, "publicacion")),
 		actual: { hash: entrada.hash },
 		publicada: await docPublicado(env, input.collection, entrada.id),
+		limites: await limitesDeCopias(env.ctx),
 	};
 }
 

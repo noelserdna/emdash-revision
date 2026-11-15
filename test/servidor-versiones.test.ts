@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { compararDocs, guardarVersion, MAX_VERSIONES } from "../src/lib/versiones.js";
+import { fijarDefectos, guardarAjustes, leerAjustes } from "../src/lib/ajustes.js";
+import { compararDocs, guardarVersion } from "../src/lib/versiones.js";
 import type { ArticuloVista, DocRevisable, HistorialVista, PTNode, VersionDetalle, VersionDoc } from "../src/lib/types.js";
 import {
 	ADMIN,
@@ -120,8 +121,9 @@ describe("historial de versiones", () => {
 		expect(await versiones(mundo)).toHaveLength(0);
 	});
 
-	it("rota: tras 7 copias quedan las 5 más recientes, y no duplica la misma", async () => {
+	it("rota según el límite de los ajustes y no duplica la misma", async () => {
 		const ctx = asPluginCtx(makeCtx(mundo, ADMIN));
+		await guardarAjustes(ctx, { copiasCambios: 5 });
 		const base = { titulo: "", extracto: "", referencias: "", content: [] as PTNode[] };
 		for (let i = 1; i <= 7; i++) {
 			await guardarVersion(ctx, { collection: "posts", entryId: "p1", tipo: "cambio", motivo: `m${i}`, doc: { ...base, titulo: `T${i}` } });
@@ -129,13 +131,47 @@ describe("historial de versiones", () => {
 		// Otro tipo no cuenta para la rotación
 		await guardarVersion(ctx, { collection: "posts", entryId: "p1", tipo: "publicacion", motivo: "p", doc: base });
 		const cs = await versiones(mundo, "cambio");
-		expect(cs).toHaveLength(MAX_VERSIONES);
+		expect(cs).toHaveLength(5);
 		expect(cs.map((v) => v.doc.titulo)).toEqual(["T3", "T4", "T5", "T6", "T7"]);
 		expect(await versiones(mundo, "publicacion")).toHaveLength(1);
 		// Igual que la más reciente: no se guarda
 		const id = await guardarVersion(ctx, { collection: "posts", entryId: "p1", tipo: "cambio", motivo: "x", doc: { ...base, titulo: "T7" } });
 		expect(id).toBeNull();
 		expect(await versiones(mundo, "cambio")).toHaveLength(5);
+		// Bajar el límite: lo que sobra se borra al guardar la siguiente copia
+		await guardarAjustes(ctx, { copiasCambios: 2 });
+		await guardarVersion(ctx, { collection: "posts", entryId: "p1", tipo: "cambio", motivo: "m8", doc: { ...base, titulo: "T8" } });
+		expect((await versiones(mundo, "cambio")).map((v) => v.doc.titulo)).toEqual(["T7", "T8"]);
+	});
+
+	it("por defecto guarda 20 copias de cambios y 5 de publicaciones; las opciones del plugin cambian los valores por defecto", async () => {
+		const ctx = asPluginCtx(makeCtx(mundo, ADMIN));
+		const a = await leerAjustes(ctx);
+		expect([a.copiasCambios, a.copiasPublicaciones]).toEqual([20, 5]);
+		const base = { titulo: "", extracto: "", referencias: "", content: [] as PTNode[] };
+		for (let i = 1; i <= 22; i++) {
+			await guardarVersion(ctx, { collection: "posts", entryId: "p1", tipo: "cambio", motivo: `m${i}`, doc: { ...base, titulo: `T${i}` } });
+		}
+		expect(await versiones(mundo, "cambio")).toHaveLength(20);
+
+		fijarDefectos({ versiones: { cambios: 30, publicaciones: 999 } });
+		try {
+			const b = await leerAjustes(ctx);
+			expect([b.copiasCambios, b.copiasPublicaciones]).toEqual([30, 100]);
+			// Lo guardado en ajustes manda sobre las opciones
+			await guardarAjustes(ctx, { copiasPublicaciones: 3 });
+			expect((await leerAjustes(ctx)).copiasPublicaciones).toBe(3);
+		} finally {
+			fijarDefectos(undefined);
+		}
+	});
+
+	it("la ruta de ajustes valida los límites de copias", async () => {
+		await expect(llamar(mundo, ADMIN, "ajustes/guardar", { copiasCambios: 0 })).rejects.toThrow();
+		await expect(llamar(mundo, ADMIN, "ajustes/guardar", { copiasPublicaciones: 101 })).rejects.toThrow();
+		await llamar(mundo, ADMIN, "ajustes/guardar", { copiasCambios: 40, copiasPublicaciones: 8 });
+		const l = await llamar<{ limites: unknown }>(mundo, ADMIN, "versiones/listar", ART);
+		expect(l.limites).toEqual({ cambios: 40, publicaciones: 8 });
 	});
 
 	it("al publicar guarda la versión publicada anterior (no el borrador), rota a 5 y nunca cancela", async () => {

@@ -136,10 +136,12 @@ function FilaVersion({
 
 function Seccion({
 	titulo,
+	limite,
 	lista,
 	...resto
 }: {
 	titulo: string;
+	limite: number;
 	lista: VersionVista[];
 	detalles: Record<string, Detalle>;
 	abiertas: Set<string>;
@@ -150,7 +152,7 @@ function Seccion({
 	return (
 		<section className="rv-historial__seccion" aria-labelledby={idTit}>
 			<h3 id={idTit}>{titulo}</h3>
-			<p className="rv-version__meta">{T.historialRotacion}</p>
+			<p className="rv-version__meta">{T.historialRotacion(limite)}</p>
 			{lista.length === 0 ? (
 				<p>{T.historialSeccionVacia}</p>
 			) : (
@@ -282,6 +284,7 @@ export function DialogoHistorial({
 						) : null}
 						<Seccion
 							titulo={T.historialCambios}
+							limite={datos.limites?.cambios ?? 20}
 							lista={datos.cambios}
 							detalles={detalles}
 							abiertas={abiertas}
@@ -290,6 +293,7 @@ export function DialogoHistorial({
 						/>
 						<Seccion
 							titulo={T.historialPublicadas}
+							limite={datos.limites?.publicaciones ?? 5}
 							lista={datos.publicaciones}
 							detalles={detalles}
 							abiertas={abiertas}

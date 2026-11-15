@@ -74,7 +74,7 @@ Cada cambio en el texto deja guardada una copia de cómo estaba antes: «Cambiar
 - **Historial de versiones**, en el menú «⋯» del artículo: dos listas, *Cambios guardados* y *Versiones publicadas anteriores*, con el motivo, la fecha, quién lo hizo y cuántos párrafos difieren del texto actual.
 - **Ver diferencias:** lo que tenía la copia, tachado; lo que hay ahora, subrayado, párrafo a párrafo.
 - **Restaurar:** la copia vuelve al borrador y el texto actual se guarda antes como copia, así que también se puede deshacer. En las versiones publicadas, *Restaurar y publicar* pasa por la misma confirmación que «Publicar ahora».
-- **Hasta 5 copias de cada tipo** por artículo (5 de cambios y 5 de publicaciones); al guardar una nueva se borra la más antigua.
+- **Cuántas copias se guardan, a tu elección:** por defecto, **20 copias de cambios** y **5 de versiones publicadas** por artículo. Al guardar una más se borra la más antigua. Los dos números se cambian en *Ajustes de revisión* o con la opción `versiones` del plugin.
 
 ![Historial de versiones: copias «Antes de restaurar una versión» y «Antes de deshacer un cambio», con fecha, autor, párrafos distintos y los botones Ver diferencias y Restaurar esta versión](docs/img/09-historial.jpg)
 
@@ -148,6 +148,8 @@ emdash({
 					urlPublica: "/blog/",
 				},
 			},
+			// Copias del historial por artículo (por defecto 20 y 5; también en Ajustes).
+			versiones: { cambios: 20, publicaciones: 5 },
 			lectura: {
 				cuerpo: '"Source Sans 3", system-ui, sans-serif',
 				titulos: "Fraunces, Georgia, serif",
@@ -174,7 +176,7 @@ emdash({
 
 ```sh
 pnpm install
-pnpm test        # 180 tests: librerías, motor de IA, servidor y panel
+pnpm test        # 182 tests: librerías, motor de IA, servidor y panel
 pnpm typecheck
 pnpm build       # tsdown → dist/
 ```
