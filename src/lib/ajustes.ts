@@ -27,11 +27,19 @@ export function limiteCopias(valor: unknown, reserva: number): number {
 	return Math.min(COPIAS_MAX, Math.max(COPIAS_MIN, n));
 }
 
+/** Hora UTC entera entre 0 y 23, o la de reserva. */
+export function horaValida(valor: unknown, reserva: number): number {
+	const n = typeof valor === "number" && Number.isFinite(valor) ? Math.round(valor) : reserva;
+	return Math.min(23, Math.max(0, n));
+}
+
 export async function leerAjustes(ctx: PluginContext): Promise<Ajustes> {
 	const guardados = await ctx.kv.get<Partial<Ajustes>>(CLAVE_AJUSTES);
 	const a = { ...defectos, ...(guardados ?? {}) };
 	a.copiasCambios = limiteCopias(a.copiasCambios, defectos.copiasCambios);
 	a.copiasPublicaciones = limiteCopias(a.copiasPublicaciones, defectos.copiasPublicaciones);
+	a.horaAprendizaje = horaValida(a.horaAprendizaje, defectos.horaAprendizaje);
+	if (typeof a.nombreGuiaAprendida !== "string" || !a.nombreGuiaAprendida.trim()) a.nombreGuiaAprendida = defectos.nombreGuiaAprendida;
 	return a;
 }
 

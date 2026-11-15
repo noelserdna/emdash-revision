@@ -30,6 +30,7 @@ function PaginaAjustes() {
 	const [errGuardar, setErrGuardar] = React.useState<unknown>(null);
 	const [guardando, setGuardando] = React.useState(false);
 	const [errCorreo, setErrCorreo] = React.useState(false);
+	const [errNombreGuia, setErrNombreGuia] = React.useState(false);
 	const id = React.useId();
 	const f = (s: string) => `${id}-${s}`;
 
@@ -81,10 +82,21 @@ function PaginaAjustes() {
 			return;
 		}
 		setErrCorreo(false);
+		if (!form.nombreGuiaAprendida.trim()) {
+			setErrNombreGuia(true);
+			document.getElementById(f("nombre-guia"))?.focus();
+			return;
+		}
+		setErrNombreGuia(false);
 		setGuardando(true);
 		setErrGuardar(null);
 		try {
-			const v = await api.guardarAjustes({ ...form, avisarA: form.avisarA.trim(), adminNombre: form.adminNombre.trim() });
+			const v = await api.guardarAjustes({
+				...form,
+				avisarA: form.avisarA.trim(),
+				adminNombre: form.adminNombre.trim(),
+				nombreGuiaAprendida: form.nombreGuiaAprendida.trim(),
+			});
 			setVista(v);
 			setForm(v.ajustes);
 			anunciar(T.ajGuardados);
@@ -271,6 +283,71 @@ function PaginaAjustes() {
 								onChange={(e) => poner("copiasPublicaciones", Math.min(COPIAS_MAX, Math.max(COPIAS_MIN, Math.round(Number(e.target.value) || COPIAS_MIN))))}
 							/>
 							<small id={f("copias-publicaciones-ayuda")}>{T.ajCopiasPublicacionesAyuda}</small>
+						</div>
+					</div>
+				</section>
+
+				<section className="rv-tarjeta" aria-labelledby={f("t-aprendizaje")}>
+					<h2 id={f("t-aprendizaje")}>{T.ajAprendizaje}</h2>
+					<p className="rv-ayuda" style={{ margin: 0 }}>
+						{T.ajAprendizajeAyuda}
+					</p>
+					<label className="rv-check">
+						<input type="checkbox" checked={form.aprenderAuto} onChange={(e) => poner("aprenderAuto", e.target.checked)} />
+						<span>{T.ajAprenderAuto}</span>
+					</label>
+					<div style={{ display: "grid", gap: "0.125rem" }}>
+						<label className="rv-check">
+							<input
+								type="checkbox"
+								checked={form.aprenderDeAdministradores}
+								aria-describedby={f("admins-ayuda")}
+								onChange={(e) => poner("aprenderDeAdministradores", e.target.checked)}
+							/>
+							<span>{T.ajAprenderAdmins}</span>
+						</label>
+						<small className="rv-ayuda" id={f("admins-ayuda")} style={{ paddingLeft: "1.875rem" }}>
+							{T.ajAprenderAdminsAyuda}
+						</small>
+					</div>
+					<div className="rv-rejilla">
+						<div className="rv-campo">
+							<label htmlFor={f("hora")}>{T.ajHoraAprendizaje}</label>
+							<select
+								id={f("hora")}
+								className="rv-input"
+								value={form.horaAprendizaje}
+								disabled={!form.aprenderAuto}
+								aria-describedby={f("hora-ayuda")}
+								onChange={(e) => poner("horaAprendizaje", Number(e.target.value))}
+							>
+								{Array.from({ length: 24 }, (_, h) => (
+									<option key={h} value={h}>
+										{`${String(h).padStart(2, "0")}:00`}
+									</option>
+								))}
+							</select>
+							<small id={f("hora-ayuda")}>{T.ajHoraAprendizajeAyuda}</small>
+						</div>
+						<div className="rv-campo">
+							<label htmlFor={f("nombre-guia")}>{T.ajNombreGuia}</label>
+							<input
+								id={f("nombre-guia")}
+								type="text"
+								className="rv-input"
+								value={form.nombreGuiaAprendida}
+								aria-invalid={errNombreGuia ? true : undefined}
+								aria-describedby={errNombreGuia ? f("nombre-guia-err") : undefined}
+								onChange={(e) => {
+									poner("nombreGuiaAprendida", e.target.value);
+									if (e.target.value.trim()) setErrNombreGuia(false);
+								}}
+							/>
+							{errNombreGuia ? (
+								<p className="rv-error" id={f("nombre-guia-err")}>
+									{T.ajNombreGuiaVacio}
+								</p>
+							) : null}
 						</div>
 					</div>
 				</section>

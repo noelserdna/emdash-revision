@@ -78,6 +78,17 @@ Cada cambio en el texto deja guardada una copia de cómo estaba antes: «Cambiar
 
 ![Historial de versiones: copias «Antes de restaurar una versión» y «Antes de deshacer un cambio», con fecha, autor, párrafos distintos y los botones Ver diferencias y Restaurar esta versión](docs/img/09-historial.jpg)
 
+### 8. La guía aprende de la revisora
+
+Lo que corrige la revisora no se queda en un artículo. Cada comentario, cada «Cambiarlo ya», cada cambio de la IA que deshace o marca como «No es esto», cada respuesta a una pregunta y cada edición suya en el editor de EmDash queda anotado. Una vez al día, y a los diez minutos de cada aprobación, la IA repasa esas correcciones y saca de ellas **criterios generales** para una guía de redacción que se escribe sola: *Aprendido de las correcciones de la revisora*. La IA la sigue al corregir, como las demás guías.
+
+- **Automático, sin aprobar nada.** Solo se convierte en criterio lo que vale para más de un artículo: lo que la revisora marca con la casilla **«Esto vale para todos los artículos»**, lo que corrige igual en dos o más artículos o lo que responde a una pregunta que afecta a varios. Una errata o un dato de un solo artículo no se generaliza.
+- **La revisora manda.** Si una corrección nueva contradice un criterio, de esta guía o de cualquier otra, gana la nueva.
+- **Retirada manual.** En *Guías de redacción* se ven los criterios por tema, desde cuándo están y en qué artículos se vieron. Si uno no vale, «Retirar» lo quita y la IA no lo vuelve a añadir.
+- **Con historial.** Antes de cada cambio se guarda cómo estaba la guía (las 20 últimas versiones) y se puede volver a cualquiera.
+- **Aviso por correo** a quien se indique en Ajustes, con los criterios añadidos, modificados y retirados.
+- **Con la API o con Claude Code.** Usa la clave y el tope de gasto de la corrección por API. Sin clave, las correcciones se acumulan y se aprenden con `/aprender-de-la-revisora` en Claude Code.
+
 ---
 
 ## En el móvil también
@@ -112,7 +123,7 @@ wrangler secret put ANTHROPIC_API_KEY
 
 Con cambios por párrafo, corregir un artículo de unas 2.500 palabras cuesta unos céntimos con Sonnet u Opus, y menos de un céntimo con Haiku.
 
-**Por Claude Code.** El plugin expone cuatro herramientas MCP: `revision_cola`, `revision_reclamar`, `revision_articulo` y `revision_entregar`. La skill [`skills/aplicar-revision`](skills/aplicar-revision/SKILL.md) enseña a Claude Code a recoger la cola, corregir como redactora y entregar.
+**Por Claude Code.** El plugin expone cuatro herramientas MCP para corregir: `revision_cola`, `revision_reclamar`, `revision_articulo` y `revision_entregar`. La skill [`skills/aplicar-revision`](skills/aplicar-revision/SKILL.md) enseña a Claude Code a recoger la cola, corregir como redactora y entregar. Otras dos, `revision_aprendizaje_pendiente` y `revision_aprendizaje_aplicar`, actualizan la guía aprendida con la skill [`skills/aprender-de-la-revisora`](skills/aprender-de-la-revisora/SKILL.md).
 
 ```sh
 claude mcp add --transport http mi-sitio https://mi-sitio.es/_emdash/api/mcp \
@@ -168,7 +179,7 @@ emdash({
 | Rol | Puede |
 |---|---|
 | **Editora** (`plugins:read`) | Leer, comentar, «Cambiarlo ya», responder preguntas, revisar cambios, aprobar (si el rol configurado lo permite), publicar, ver y restaurar versiones, y pulsar «He terminado» |
-| **Administrador** (`plugins:manage`) | Todo lo anterior, más guías de redacción, ajustes, corregir con la API eligiendo modelo y las herramientas MCP |
+| **Administrador** (`plugins:manage`) | Todo lo anterior, más guías de redacción (también retirar criterios aprendidos y restaurar versiones de la guía), ajustes, corregir con la API eligiendo modelo y las herramientas MCP |
 
 ---
 
@@ -176,7 +187,7 @@ emdash({
 
 ```sh
 pnpm install
-pnpm test        # 188 tests: librerías, motor de IA, servidor y panel
+pnpm test        # 208 tests: librerías, motor de IA, servidor y panel
 pnpm typecheck
 pnpm build       # tsdown → dist/
 ```

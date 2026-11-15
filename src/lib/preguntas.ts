@@ -6,6 +6,7 @@
 import { PluginRouteError } from "emdash";
 import type { PluginContentItem } from "emdash";
 
+import { autorDe, registrarSenal } from "./aprendizaje.js";
 import { nombreDe, type Usuario } from "./acceso.js";
 import { anclaDeFragmento } from "./anclas.js";
 import { camposDe, leerParaAnclar, tituloDe, type Entorno } from "./contenido.js";
@@ -209,5 +210,29 @@ export async function responderPregunta(
 			if (data.tipo === "pregunta" && data.estado === "abierto") await comentarios.put(id, { ...data, respuesta });
 		}
 	}
-	return { pregunta: await preguntaVista(env, input.reglaId, nueva) };
+	const vista = await preguntaVista(env, input.reglaId, nueva);
+	const primera = vista.entradas[0] ?? (nueva.entradas[0] ? { collection: nueva.entradas[0].collection, id: nueva.entradas[0].entryId, titulo: "", cita: null } : null);
+	if (input.tipo !== "luego" && primera) {
+		const titulos = [...new Set(vista.entradas.map((e) => e.titulo))];
+		const n = nueva.entradas.length;
+		await registrarSenal(env, autorDe(user), {
+			tipo: "respuesta",
+			collection: primera.collection,
+			entryId: primera.id,
+			titulo: titulos.length ? titulos.join(" · ") : null,
+			cita: primera.cita,
+			texto: nueva.pregunta,
+			despues: texto,
+			nota: `Respuesta: ${RESPUESTA_LEGIBLE[input.tipo]}${texto ? ` — ${texto}` : ""}. Afecta a ${n} ${n === 1 ? "artículo" : "artículos"}.`,
+			ref: input.reglaId,
+		});
+	}
+	return { pregunta: vista };
 }
+
+const RESPUESTA_LEGIBLE: Record<RespuestaPregunta["tipo"], string> = {
+	correcto: "es correcto",
+	quitar: "quitarlo",
+	cambiar: "cambiarlo",
+	luego: "lo mira luego",
+};

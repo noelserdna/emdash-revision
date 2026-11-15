@@ -175,6 +175,8 @@ export const T = {
 	formPropuestoAyuda: "Si escribes el texto exacto, podrás cambiarlo tú misma con «Cambiarlo ya».",
 	formFragmento: "Fragmento exacto (opcional)",
 	formFragmentoAyuda: "Copia aquí el trozo concreto del párrafo al que te refieres.",
+	formGeneral: "Esto vale para todos los artículos",
+	formGeneralAyuda: "La IA lo añadirá a la guía de redacción como criterio general.",
 	formFragmentoNoEncontrado:
 		"No encontramos ese texto en este párrafo, o aparece más de una vez. Copia un trozo un poco más largo.",
 	formFragmentoSeleccion: "Fragmento seleccionado:",
@@ -295,6 +297,53 @@ export const T = {
 	guiaBorrada: "Guía borrada.",
 	guiaSinGuardar: "Hay cambios sin guardar.",
 
+	// ─── Guía aprendida ─────────────────────────────────────────────────────
+	apSeActualiza: "Se actualiza sola",
+	apIntro:
+		"La IA añade aquí, sin que haga falta aprobarlos, los criterios generales que saca de las correcciones de la revisora: sus comentarios, lo que cambia, lo que deshace y lo que responde. La IA la sigue al corregir, como las demás guías. No se edita a mano: si un criterio no vale, retíralo.",
+	apEstado: (n: number, fecha: string | null): string =>
+		`${n} ${plural(n, "corrección pendiente", "correcciones pendientes")} de aprender${fecha ? ` · última actualización: ${fecha}` : ""}`,
+	apEnCurso: "Actualizando la guía…",
+	apParado: (motivo: "sin_clave" | "tope" | "desactivado"): string =>
+		({
+			sin_clave:
+				"No se está aprendiendo solo porque no hay clave de la API de Anthropic. Las correcciones se guardan: ponla en Ajustes de revisión o lanza /aprender-de-la-revisora en Claude Code.",
+			tope: "Se ha alcanzado el tope de gasto de este mes: las correcciones se guardan y se aprenderán el mes que viene (o con /aprender-de-la-revisora en Claude Code).",
+			desactivado: "El aprendizaje automático está desactivado en Ajustes de revisión. Puedes actualizar la guía a mano con «Actualizar ahora».",
+		})[motivo],
+	apError: (e: string) => `La última actualización falló: ${e}`,
+	apUltimoResumen: "Último cambio",
+	apActualizar: "Actualizar ahora",
+	apActualizando: "Actualizando…",
+	apActualizada: "Guía actualizada.",
+	apProgramada: "La IA está leyendo las correcciones. La guía se actualizará en un momento.",
+	apSinSenales: "No hay correcciones nuevas de las que aprender.",
+	apSinClave:
+		"Sin clave de la API de Anthropic no se puede actualizar desde aquí. Hazlo con Claude Code: conecta el MCP del sitio (Ajustes de revisión → Conexión con Claude Code) y lanza /aprender-de-la-revisora.",
+	apTope: "Se ha alcanzado el tope de gasto de este mes. Puedes subirlo en Ajustes de revisión o lanzar /aprender-de-la-revisora en Claude Code.",
+	apHistorial: "Historial de la guía",
+	apHistorialIntro: "Cada vez que la guía cambia se guarda cómo estaba antes. Se guardan las 20 últimas.",
+	apHistorialVacio: "Todavía no hay versiones anteriores.",
+	apVersion: (desde: string, criterios: number) =>
+		`Versión del ${desde} · ${criterios} ${plural(criterios, "criterio", "criterios")}`,
+	apVersionPrimera: (criterios: number) => `Primera versión · ${criterios} ${plural(criterios, "criterio", "criterios")}`,
+	apReemplazada: (fecha: string, resumen: string) => `Cambió el ${fecha}: ${resumen}`,
+	apRestaurar: "Restaurar",
+	apRestaurarDe: (fecha: string) => `Restaurar la versión del ${fecha}`,
+	apRestaurarConfirmar: "¿Volver a esta versión de la guía?",
+	apRestaurarTexto: "Se repondrán sus criterios tal como estaban. La versión actual se guarda en el historial, así que podrás deshacerlo.",
+	apRestaurada: "Versión de la guía restaurada.",
+	apVacio: "Todavía no hay criterios aprendidos. Aparecerán aquí cuando la revisora corrija algo que valga para todos los artículos.",
+	apDesde: (fecha: string) => `Desde el ${fecha}`,
+	apVistoEn: "Visto en:",
+	apRetirar: "Retirar",
+	apRetirarDe: (texto: string) => `Retirar el criterio: ${texto}`,
+	apRetirarConfirmar: "¿Retirar este criterio?",
+	apRetirarTexto: "Dejará de estar en la guía y la IA no lo volverá a añadir, salvo que la revisora lo pida para todos los artículos.",
+	apRetirado: "Criterio retirado.",
+	apRetirados: (n: number) => `Criterios retirados (${n})`,
+	apRetiradoPor: (quien: string) => (quien === "ia" ? "Lo retiró la IA" : `Lo retiró ${quien}`),
+
 	// ─── Ajustes ────────────────────────────────────────────────────────────
 	ajustesTitulo: "Ajustes de revisión",
 	ajIA: "Corrección con la IA",
@@ -340,6 +389,16 @@ export const T = {
 	ajAtajosAyuda:
 		"Con el foco en el artículo: flechas para moverte, C para comentar, N para ir al cambio siguiente y B para dar por bueno un cambio sin avisos.",
 	ajGuardados: "Ajustes guardados.",
+	ajAprendizaje: "Aprendizaje",
+	ajAprendizajeAyuda:
+		"La IA lee las correcciones de la revisora y añade a una guía de redacción los criterios que valen para todos los artículos. Se hace con la clave de la API, una vez al día y a los 10 minutos de cada aprobación.",
+	ajAprenderAuto: "Aprender automáticamente de las correcciones",
+	ajHoraAprendizaje: "Hora del repaso diario (UTC)",
+	ajHoraAprendizajeAyuda: "En España, UTC es una hora menos en invierno y dos en verano.",
+	ajAprenderAdmins: "Incluir también lo que corrigen los administradores",
+	ajAprenderAdminsAyuda: "Por defecto solo se aprende de quien puede aprobar y no es administrador.",
+	ajNombreGuia: "Nombre de la guía aprendida",
+	ajNombreGuiaVacio: "Ponle un nombre a la guía.",
 
 	// ─── Historial de versiones ─────────────────────────────────────────────
 	historial: "Historial de versiones",

@@ -170,6 +170,8 @@ export interface ComentarioDoc {
 	reglaId?: string | null;
 	/** Para preguntas: respuesta rápida elegida. */
 	respuesta?: RespuestaPregunta | null;
+	/** La revisora marcó «Esto vale para todos los artículos». */
+	general?: boolean;
 }
 
 export interface RespuestaPregunta {
@@ -225,6 +227,8 @@ export interface GuiaDoc {
 	markdown: string;
 	orden: number;
 	actualizado: string;
+	/** Guía que genera el plugin (aprendizaje): de solo lectura en el panel. */
+	automatica?: boolean;
 }
 
 export interface AuditoriaDoc {
@@ -238,7 +242,8 @@ export interface AuditoriaDoc {
 		| "retirar_aprobacion"
 		| "publicar"
 		| "publicar_sin_aprobar"
-		| "restaurar";
+		| "restaurar"
+		| "aprender";
 	userId: string | null;
 	collection: string;
 	entryId: string;
@@ -390,6 +395,14 @@ export interface Ajustes {
 	copiasCambios: number;
 	/** Copias de lo publicado que se guardan por artículo antes de cada publicación. */
 	copiasPublicaciones: number;
+	/** Sintetizar solo (cron diario y tras aprobar) las correcciones de la revisora en la guía automática. */
+	aprenderAuto: boolean;
+	/** Hora UTC (0-23) de la síntesis diaria. */
+	horaAprendizaje: number;
+	/** Aprender también de lo que corrigen los administradores. */
+	aprenderDeAdministradores: boolean;
+	/** Nombre de la guía automática. */
+	nombreGuiaAprendida: string;
 }
 
 /** Límites admitidos para las copias del historial. */
@@ -408,6 +421,10 @@ export const AJUSTES_DEFECTO: Ajustes = {
 	terminosSensibles: "",
 	copiasCambios: 20,
 	copiasPublicaciones: 5,
+	aprenderAuto: true,
+	horaAprendizaje: 3,
+	aprenderDeAdministradores: false,
+	nombreGuiaAprendida: "Aprendido de las correcciones de la revisora",
 };
 
 // ─── Vistas (respuestas de las rutas; las consume el panel) ──────────────────
@@ -579,4 +596,117 @@ export interface HistorialVista {
 export interface VersionDetalle {
 	version: VersionVista & { doc: DocRevisable };
 	comparacion: BloqueComparado[];
+}
+
+// ─── Aprendizaje (guía que aprende de la revisora) ───────────────────────────
+
+/** Id fijo de la guía automática en la colección `guias`. */
+export const GUIA_APRENDIDA_ID = "aprendido";
+
+export type TipoSenal = "comentario" | "cambiar_ya" | "no_es_esto" | "deshacer" | "respuesta" | "edicion";
+
+/** Una acción de una revisora que puede enseñar un criterio general. */
+export interface SenalDoc {
+	tipo: TipoSenal;
+	userId: string;
+	nombre: string;
+	collection: string;
+	entryId: string;
+	titulo: string;
+	/** Campo del artículo (content, title, excerpt, references), si aplica. */
+	campo?: string | null;
+	cita?: string | null;
+	antes?: string | null;
+	despues?: string | null;
+	texto?: string | null;
+	nota?: string | null;
+	/** La revisora dijo que vale para todos los artículos. */
+	general: boolean;
+	/** Comentario o cambio de origen (para no duplicar señales de una misma acción). */
+	ref?: string | null;
+	fecha: string;
+	procesada: boolean;
+}
+
+export interface EvidenciaAprendizaje {
+	senalId: string;
+	collection?: string;
+	entryId: string;
+	titulo: string;
+	cita?: string | null;
+	fecha: string;
+}
+
+export interface AprendizajeDoc {
+	/** Regla imperativa, 1-3 frases. */
+	texto: string;
+	/** Tema corto para agrupar. */
+	tema: string;
+	evidencias: EvidenciaAprendizaje[];
+	estado: "activo" | "retirado";
+	/** Nombre de quien lo retiró, o «ia» si lo retiró la síntesis. */
+	retiradoPor?: string | null;
+	creado: string;
+	actualizado: string;
+}
+
+/** Versión anterior de la guía automática (se guardan las últimas 20). */
+export interface GuiaHistorialDoc {
+	/** Cuándo se reemplazó. */
+	fecha: string;
+	/** Desde cuándo estaba vigente esa versión (null si es la primera). */
+	desde: string | null;
+	/** Qué cambio la reemplazó. */
+	resumen: string;
+	markdown: string;
+	aprendizajes: Array<{ id: string; data: AprendizajeDoc }>;
+}
+
+export type OpAprendizaje = "añadir" | "modificar" | "retirar";
+
+export interface OperacionAprendizaje {
+	op: OpAprendizaje;
+	id?: string;
+	texto?: string;
+	tema?: string;
+	senales: string[];
+}
+
+export interface SalidaAprendizaje {
+	operaciones: OperacionAprendizaje[];
+	resumen: string;
+}
+
+/** Lo que recibe la IA (API o Claude Code) para sintetizar. */
+export interface EntradaAprendizaje {
+	senales: Array<Omit<SenalDoc, "procesada" | "userId" | "ref"> & { id: string }>;
+	guias: Array<{ nombre: string; markdown: string }>;
+	aprendizajes: Array<{ id: string; texto: string; tema: string; estado: "activo" | "retirado"; retiradoPor: string | null; articulos: number }>;
+}
+
+export interface AprendizajeVista extends AprendizajeDoc {
+	id: string;
+}
+
+export interface EstadoAprendizajeVista {
+	guia: { id: string; nombre: string; actualizado: string | null };
+	/** Señales pendientes de aprender. */
+	pendientes: number;
+	ultimaActualizacion: string | null;
+	ultimoResumen: string | null;
+	/** Por qué no se está aprendiendo solo (null si todo va bien). */
+	parado: "sin_clave" | "tope" | "desactivado" | null;
+	error: string | null;
+	/** Hay una síntesis programada o en curso. */
+	enCurso: boolean;
+	apiDisponible: boolean;
+	aprendizajes: AprendizajeVista[];
+}
+
+export interface GuiaHistorialVista {
+	id: string;
+	fecha: string;
+	desde: string | null;
+	resumen: string;
+	criterios: number;
 }

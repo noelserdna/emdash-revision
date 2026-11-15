@@ -185,7 +185,7 @@ export async function reanclar(ctx: PluginContext, collection: string, entryId: 
 export async function purgarEntrada(ctx: PluginContext, collection: string, entryId: string): Promise<void> {
 	const cols = collections(ctx);
 	await cols.revisiones.delete(revisionId(collection, entryId));
-	const porEntrada = [cols.lecturas, cols.comentarios, cols.trabajos, cols.cambios, cols.auditoria, cols.versiones] as const;
+	const porEntrada = [cols.lecturas, cols.comentarios, cols.trabajos, cols.cambios, cols.auditoria, cols.versiones, cols.senales] as const;
 	for (const col of porEntrada) {
 		const c = col as unknown as {
 			query: (o: { where: Record<string, unknown>; limit: number; cursor?: string }) => Promise<{

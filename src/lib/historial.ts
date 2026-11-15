@@ -23,7 +23,7 @@ import {
 import { hashDoc } from "./hash.js";
 import { auditar, leerRevision, reanclar, recalcular } from "./revisiones.js";
 import { collections } from "./store.js";
-import type { Aprobacion, HistorialVista, VersionDetalle, VersionDoc } from "./types.js";
+import type { Aprobacion, DocRevisable, HistorialVista, VersionDetalle, VersionDoc } from "./types.js";
 import { compararDocs, guardarVersion, limitesDeCopias, resumenDe, versionesDe, versionVista } from "./versiones.js";
 
 export const MOTIVO_RESTAURAR = "Antes de restaurar una versión";
@@ -211,21 +211,21 @@ export async function copiaAntesDePublicar(env: Entorno, event: ContentPolicyEve
  * `content:afterSave` con una edición que no es del plugin: guarda como copia
  * el estado anterior, tomado de las revisiones de EmDash (la anterior a la
  * actual; si hay varias, la que coincide con el último texto conocido). Si no
- * se puede obtener, no guarda nada y no falla.
+ * se puede obtener, no guarda nada y no falla. Devuelve el texto anterior (o null).
  */
 export async function copiaDeEdicionExterna(
 	env: Entorno,
 	entrada: Entrada,
 	hashAnterior: string | null,
 	actorId: string | null,
-): Promise<void> {
+): Promise<DocRevisable | null> {
 	const { ctx } = env;
 	try {
 		const content = ctx.content;
-		if (!content?.listRevisions || !entrada.draftRevisionId) return;
+		if (!content?.listRevisions || !entrada.draftRevisionId) return null;
 		const lista = await content.listRevisions(entrada.collection, entrada.id, { limit: 20 });
 		const i = lista.findIndex((r) => r.id === entrada.draftRevisionId);
-		if (i < 0) return;
+		if (i < 0) return null;
 		const candidatas = lista.slice(i + 1, i + 11);
 		let elegida: { doc: ReturnType<typeof docDeDatos>; hash: string } | null = null;
 		for (const r of candidatas) {
@@ -243,7 +243,7 @@ export async function copiaDeEdicionExterna(
 				break;
 			}
 		}
-		if (!elegida) return;
+		if (!elegida) return null;
 		const actor = actorId ? await buscarUsuario(ctx, actorId) : null;
 		await guardarVersion(ctx, {
 			collection: entrada.collection,
@@ -255,8 +255,10 @@ export async function copiaDeEdicionExterna(
 			userId: actor?.id ?? actorId,
 			nombre: actor?.nombre ?? null,
 		});
+		return elegida.doc;
 	} catch (error) {
 		ctx.log.warn("[historial] no se pudo guardar la copia de una edición externa", { error: String(error) });
+		return null;
 	}
 }
 

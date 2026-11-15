@@ -45,13 +45,14 @@ export function Compositor(p: PropsCompositor) {
 	const [texto, setTexto] = React.useState(p.inicial?.texto ?? "");
 	const [propuesto, setPropuesto] = React.useState(p.inicial?.propuesto ?? "");
 	const [fragmento, setFragmento] = React.useState(p.inicial?.fragmento ?? "");
+	const [general, setGeneral] = React.useState(false);
 	const [conSeleccion, setConSeleccion] = React.useState(p.objetivo.inicio !== undefined && p.objetivo.fin !== undefined);
 	const [errTexto, setErrTexto] = React.useState<string | null>(null);
 	const [errFragmento, setErrFragmento] = React.useState<string | null>(null);
 	const [errPropuesto, setErrPropuesto] = React.useState<string | null>(null);
 	const [error, setError] = React.useState<unknown>(null);
 	const [enviando, setEnviando] = React.useState(false);
-	const ids = { texto: React.useId(), propuesto: React.useId(), fragmento: React.useId(), titulo: React.useId() };
+	const ids = { texto: React.useId(), propuesto: React.useId(), fragmento: React.useId(), titulo: React.useId(), general: React.useId() };
 	const refTexto = React.useRef<HTMLTextAreaElement>(null);
 	const refFragmento = React.useRef<HTMLInputElement>(null);
 	const refPropuesto = React.useRef<HTMLTextAreaElement>(null);
@@ -124,6 +125,7 @@ export function Compositor(p: PropsCompositor) {
 				textoPropuesto: propuesto.trim() || undefined,
 				ancla,
 				fragmento: !conSeleccion && fragmento.trim() ? fragmento.trim() : undefined,
+				general: general || undefined,
 			});
 			borrarBorrador(p.collection, p.id);
 			if (cambiarYa) {
@@ -245,6 +247,22 @@ export function Compositor(p: PropsCompositor) {
 					) : null}
 				</div>
 			) : null}
+
+			<div style={{ display: "grid", gap: "0.125rem" }}>
+				<label className="rv-check" htmlFor={ids.general}>
+					<input
+						id={ids.general}
+						type="checkbox"
+						checked={general}
+						aria-describedby={`${ids.general}-ayuda`}
+						onChange={(e) => setGeneral(e.target.checked)}
+					/>
+					<span>{T.formGeneral}</span>
+				</label>
+				<small className="rv-ayuda" id={`${ids.general}-ayuda`} style={{ paddingLeft: "1.875rem" }}>
+					{T.formGeneralAyuda}
+				</small>
+			</div>
 
 			{error && !errFragmento ? <AvisoError error={error} /> : null}
 

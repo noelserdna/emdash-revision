@@ -5,6 +5,7 @@
 import { PluginRouteError } from "emdash";
 
 import { esAdmin, nombreDe, type Usuario } from "./acceso.js";
+import { autorDe, registrarSenal } from "./aprendizaje.js";
 import { leerAjustes, terminosSensibles } from "./ajustes.js";
 import { anclaDeFragmento, resolverAncla } from "./anclas.js";
 import { escribirDoc, leerParaAnclar, type Entorno } from "./contenido.js";
@@ -38,6 +39,8 @@ export interface EntradaCrear {
 	ancla: Ancla | null;
 	fragmento?: string | null;
 	parentId?: string | null;
+	/** «Esto vale para todos los artículos». */
+	general?: boolean | null;
 }
 
 export async function crearComentario(
@@ -51,6 +54,7 @@ export async function crearComentario(
 
 	let ancla: Ancla | null = null;
 	let parentId: string | null = null;
+	let titulo: string | null = null;
 	if (input.parentId) {
 		const padre = await leerComentario(env, input.parentId);
 		if (padre.collection !== input.collection || padre.entryId !== input.id) {
@@ -59,6 +63,7 @@ export async function crearComentario(
 		parentId = input.parentId;
 	} else if (input.ancla) {
 		const entrada = await leerParaAnclar(env, input.collection, input.id);
+		titulo = entrada.doc.titulo;
 		const base = entrada.draftRevisionId;
 		const fragmento = input.fragmento?.trim();
 		if (fragmento) {
@@ -97,6 +102,7 @@ export async function crearComentario(
 		reglaId: null,
 		respuesta: null,
 	};
+	if (input.general) doc.general = true;
 	const id = nuevoId();
 	await collections(ctx).comentarios.put(id, doc);
 	const revision = await recalcular(ctx, input.collection, input.id, { anularAprobacion: !parentId });
@@ -107,6 +113,18 @@ export async function crearComentario(
 		entryId: input.id,
 		hash: revision.hash,
 		detalle: parentId ? `respuesta a ${parentId}` : id,
+	});
+	await registrarSenal(env, autorDe(user), {
+		tipo: "comentario",
+		collection: input.collection,
+		entryId: input.id,
+		titulo,
+		campo: ancla?.campo ?? "general",
+		cita: ancla?.cita ?? null,
+		texto,
+		despues: doc.textoPropuesto ?? null,
+		general: !!input.general,
+		ref: id,
 	});
 	return { comentario: comentarioVista(id, doc, user), revision };
 }
@@ -207,6 +225,19 @@ export async function aplicarComentario(env: Entorno, user: Usuario, id: string)
 		revisionId: guardada.draftRevisionId,
 		hash: guardada.hash,
 		detalle: id,
+	});
+	await registrarSenal(env, autorDe(user), {
+		tipo: "cambiar_ya",
+		collection: c.collection,
+		entryId: c.entryId,
+		titulo: guardada.doc.titulo,
+		campo: c.ancla.campo,
+		cita: c.ancla.cita,
+		antes: c.ancla.cita,
+		despues: c.textoPropuesto,
+		texto: c.texto,
+		general: !!c.general,
+		ref: id,
 	});
 	return { collection: c.collection, entryId: c.entryId };
 }

@@ -6,7 +6,13 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { MODELOS, costeDe } from "./costes.js";
 import { ESQUEMA_SALIDA, construirSystem, construirUsuario, validarSalida } from "./prompt.js";
-import type { EntradaCorreccion, Esfuerzo, ModeloId, SalidaCorreccion, UsoIA } from "./types.js";
+import {
+	ESQUEMA_SALIDA_APRENDIZAJE,
+	construirSystemAprendizaje,
+	construirUsuarioAprendizaje,
+	validarSalidaAprendizaje,
+} from "./prompt-aprendizaje.js";
+import type { EntradaAprendizaje, EntradaCorreccion, Esfuerzo, ModeloId, SalidaAprendizaje, SalidaCorreccion, UsoIA } from "./types.js";
 
 export interface ResultadoMotor {
 	salida: SalidaCorreccion;
@@ -47,13 +53,34 @@ interface ClienteMinimo {
 
 /** Parámetros de la petición (exportado para tests y depuración). */
 export function construirParametros(entrada: EntradaCorreccion, modelo: ModeloId, esfuerzo: Esfuerzo): ParamsStream {
+	return parametrosComunes(ESQUEMA_SALIDA, construirSystem(entrada), construirUsuario(entrada), modelo, esfuerzo);
+}
+
+/** Parámetros de la síntesis de la guía aprendida (mismo cliente, fallbacks y esfuerzo que la corrección). */
+export function construirParametrosAprendizaje(entrada: EntradaAprendizaje, modelo: ModeloId, esfuerzo: Esfuerzo): ParamsStream {
+	return parametrosComunes(
+		ESQUEMA_SALIDA_APRENDIZAJE,
+		construirSystemAprendizaje(entrada),
+		construirUsuarioAprendizaje(entrada),
+		modelo,
+		esfuerzo,
+	);
+}
+
+function parametrosComunes(
+	schema: Record<string, unknown>,
+	system: ParamsStream["system"],
+	usuario: string,
+	modelo: ModeloId,
+	esfuerzo: Esfuerzo,
+): ParamsStream {
 	const params: ParamsStream = {
 		model: modelo,
 		max_tokens: MAX_TOKENS,
 		thinking: { type: "adaptive" },
-		output_config: { effort: esfuerzo, format: { type: "json_schema", schema: ESQUEMA_SALIDA } },
-		system: construirSystem(entrada),
-		messages: [{ role: "user", content: construirUsuario(entrada) }],
+		output_config: { effort: esfuerzo, format: { type: "json_schema", schema } },
+		system,
+		messages: [{ role: "user", content: usuario }],
 	};
 	// Haiku no tiene fallback en servidor ante un rechazo.
 	if (modelo !== "claude-haiku-5-5") {
@@ -124,11 +151,39 @@ function textoDe(m: Mensaje): string {
 }
 
 export async function corregirConApi(entrada: EntradaCorreccion, opts: OpcionesMotor): Promise<ResultadoMotor> {
+	return llamarEstructurado(construirParametros(entrada, opts.modelo, opts.esfuerzo), validarSalida, opts, {
+		rechazo: (cat) =>
+			`El modelo ha declinado hacer esta corrección${cat ? ` (categoría: ${cat})` : ""}. Prueba con otro modelo o corrige a mano.`,
+		truncado: "La respuesta se cortó antes de terminar (límite de tokens). Prueba con menos comentarios o sin reescritura completa.",
+	});
+}
+
+export interface ResultadoAprendizaje {
+	salida: SalidaAprendizaje;
+	usage: UsoIA;
+	coste: number;
+	modelo: string;
+}
+
+/** Síntesis de la guía aprendida con la API (mismo patrón que la corrección). */
+export async function aprenderConApi(entrada: EntradaAprendizaje, opts: OpcionesMotor): Promise<ResultadoAprendizaje> {
+	return llamarEstructurado(construirParametrosAprendizaje(entrada, opts.modelo, opts.esfuerzo), validarSalidaAprendizaje, opts, {
+		rechazo: (cat) =>
+			`El modelo ha declinado actualizar la guía${cat ? ` (categoría: ${cat})` : ""}. Prueba con otro modelo o con Claude Code.`,
+		truncado: "La respuesta se cortó antes de terminar (límite de tokens). Las correcciones quedan pendientes para la próxima vez.",
+	});
+}
+
+async function llamarEstructurado<S>(
+	params: ParamsStream,
+	validar: (valor: unknown) => S,
+	opts: OpcionesMotor,
+	textos: { rechazo: (categoria: string | null | undefined) => string; truncado: string },
+): Promise<{ salida: S; usage: UsoIA; coste: number; modelo: string }> {
 	if (!opts.cliente && !opts.apiKey?.trim()) {
 		throw new ErrorMotor("No hay clave de la API de Anthropic configurada.", "sin_clave");
 	}
 	const cliente = crearCliente(opts);
-	const params = construirParametros(entrada, opts.modelo, opts.esfuerzo);
 
 	let mensaje: Mensaje;
 	try {
@@ -144,17 +199,11 @@ export async function corregirConApi(entrada: EntradaCorreccion, opts: OpcionesM
 	switch (mensaje.stop_reason) {
 		case "refusal": {
 			const categoria = (mensaje as { stop_details?: { category?: string | null } | null }).stop_details?.category;
-			throw new ErrorMotor(
-				`El modelo ha declinado hacer esta corrección${categoria ? ` (categoría: ${categoria})` : ""}. Prueba con otro modelo o corrige a mano.`,
-				"rechazo",
-			);
+			throw new ErrorMotor(textos.rechazo(categoria), "rechazo");
 		}
 		case "max_tokens":
 		case "model_context_window_exceeded":
-			throw new ErrorMotor(
-				"La respuesta se cortó antes de terminar (límite de tokens). Prueba con menos comentarios o sin reescritura completa.",
-				"truncado",
-			);
+			throw new ErrorMotor(textos.truncado, "truncado");
 		case "end_turn":
 		case "stop_sequence":
 			break;
@@ -169,9 +218,9 @@ export async function corregirConApi(entrada: EntradaCorreccion, opts: OpcionesM
 	} catch {
 		throw new ErrorMotor("La respuesta del modelo no es JSON válido.", "salida_invalida");
 	}
-	let salida: SalidaCorreccion;
+	let salida: S;
 	try {
-		salida = validarSalida(json);
+		salida = validar(json);
 	} catch (e) {
 		throw new ErrorMotor(e instanceof Error ? e.message : String(e), "salida_invalida");
 	}

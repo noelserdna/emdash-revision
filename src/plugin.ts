@@ -4,7 +4,7 @@
  * El descriptor para astro.config.mjs está en ./index.ts (revisionPlugin).
  */
 
-import { definePlugin } from "emdash";
+import { definePlugin, PluginRouteError } from "emdash";
 import type { PluginContext, PluginRoute, ResolvedPlugin, RouteContext } from "emdash";
 import { z } from "astro/zod";
 
@@ -13,6 +13,23 @@ import { requireUser } from "./lib/acceso.js";
 import { AJUSTE_CLAVE, fijarDefectos, gastoDelMes, guardarAjustes, leerAjustes, resolverClaveApi } from "./lib/ajustes.js";
 import { borrarClave, guardarClave } from "./lib/clave.js";
 import { aprobar, guardarLectura, publicar, retirar } from "./lib/aprobacion.js";
+import {
+	actualizarAhora,
+	alCron,
+	aplicarDeAgente,
+	asegurarCronDiario,
+	CRON_AHORA,
+	CRON_DIARIO,
+	CRON_PRONTO,
+	estadoAprendizaje,
+	listarHistorialGuia,
+	pendienteParaAgente,
+	programarPronto,
+	regenerarGuia,
+	restaurarHistorialGuia,
+	retirarAprendizaje,
+	senalDeEdicion,
+} from "./lib/aprendizaje.js";
 import { darVeredicto } from "./lib/cambios.js";
 import {
 	aplicarComentario,
@@ -47,7 +64,7 @@ import {
 	trabajoVista,
 	ultimoTrabajo,
 } from "./lib/trabajos.js";
-import { COPIAS_MAX, COPIAS_MIN, type AjustesVista, type GuiaDoc } from "./lib/types.js";
+import { COPIAS_MAX, COPIAS_MIN, GUIA_APRENDIDA_ID, type AjustesVista, type GuiaDoc } from "./lib/types.js";
 import { articulo, inicio } from "./lib/vistas.js";
 import { PLUGIN_ID, VERSION } from "./version.js";
 
@@ -98,6 +115,18 @@ const ajustesSchema = z.object({
 	terminosSensibles: z.string().max(5000).optional(),
 	copiasCambios: z.number().int().min(COPIAS_MIN).max(COPIAS_MAX).optional(),
 	copiasPublicaciones: z.number().int().min(COPIAS_MIN).max(COPIAS_MAX).optional(),
+	aprenderAuto: z.boolean().optional(),
+	horaAprendizaje: z.number().int().min(0).max(23).optional(),
+	aprenderDeAdministradores: z.boolean().optional(),
+	nombreGuiaAprendida: z.string().trim().min(1).max(200).optional(),
+});
+
+const operacionAprendizajeSchema = z.object({
+	op: z.enum(["añadir", "modificar", "retirar"]),
+	id: z.string().max(200).nullable().optional(),
+	texto: z.string().max(5000).nullable().optional(),
+	tema: z.string().max(500).nullable().optional(),
+	senales: z.array(z.string().max(200)).max(500),
 });
 
 const schemas = {
@@ -114,6 +143,7 @@ const schemas = {
 		ancla: anclaSchema.nullable(),
 		fragmento: z.string().max(5000).nullable().optional(),
 		parentId: z.string().max(200).nullable().optional(),
+		general: z.boolean().optional(),
 	}),
 	editarComentario: z.object({
 		id: idSimple,
@@ -174,6 +204,12 @@ const schemas = {
 		ops: z.array(opSchema).max(2000),
 		resoluciones: z.array(resolucionSchema).max(2000),
 	}),
+	aplicarAprendizaje: z.object({
+		operaciones: z.array(operacionAprendizajeSchema).max(500),
+		resumen: z.string().max(5000),
+		/** Señales del lote que se marcan como aprendidas (por defecto, las de la última llamada a mcp/aprendizaje-pendiente). */
+		lote: z.array(z.string().max(200)).max(500).optional(),
+	}),
 };
 
 // ─── Plugin ──────────────────────────────────────────────────────
@@ -223,7 +259,12 @@ export function createPlugin(options: RevisionPluginOptions): ResolvedPlugin {
 
 	const routes: Record<string, PluginRoute<any>> = {
 		// ── Revisora (plugins:read) ──
-		inicio: memberRoute(schemas.vacio, async (ctx) => inicio(entorno(ctx), requireUser(ctx))),
+		inicio: memberRoute(schemas.vacio, async (ctx) => {
+			const user = requireUser(ctx);
+			// Sitios ya instalados (sin plugin:activate): el cron del aprendizaje se registra aquí.
+			await asegurarCronDiario(ctx);
+			return inicio(entorno(ctx), user);
+		}),
 		"articulo/get": memberRoute(schemas.ref, async (ctx) =>
 			articulo(entorno(ctx), requireUser(ctx), ctx.input.collection, ctx.input.id),
 		),
@@ -254,9 +295,12 @@ export function createPlugin(options: RevisionPluginOptions): ResolvedPlugin {
 		"revision/terminar": memberRoute(schemas.ref, async (ctx) =>
 			terminar(entorno(ctx), requireUser(ctx), ctx.input.collection, ctx.input.id),
 		),
-		"revision/aprobar": memberRoute(schemas.confirmable, async (ctx) =>
-			aprobar(entorno(ctx), requireUser(ctx), ctx.input),
-		),
+		"revision/aprobar": memberRoute(schemas.confirmable, async (ctx) => {
+			const r = await aprobar(entorno(ctx), requireUser(ctx), ctx.input);
+			// Al aprobar, la guía aprende de lo corregido en ese artículo (a los 10 minutos).
+			if (!("requiereConfirmacion" in r)) await programarPronto(ctx);
+			return r;
+		}),
 		"revision/retirar": memberRoute(schemas.ref, async (ctx) => retirar(entorno(ctx), requireUser(ctx), ctx.input)),
 		"revision/publicar": memberRoute(schemas.confirmable, async (ctx) =>
 			publicar(entorno(ctx), requireUser(ctx), ctx.input),
@@ -303,6 +347,9 @@ export function createPlugin(options: RevisionPluginOptions): ResolvedPlugin {
 			return { guias: rows.map((r) => ({ ...r.data, id: r.id })) };
 		}),
 		"guias/guardar": adminRoute(schemas.guia, async (ctx) => {
+			if (ctx.input.id === GUIA_APRENDIDA_ID) {
+				throw PluginRouteError.badRequest("Esta guía se actualiza sola a partir de las correcciones: no se puede editar a mano.");
+			}
 			const { guias } = collections(ctx);
 			const id = ctx.input.id ?? nuevoId();
 			const actual = ctx.input.id ? await guias.get(ctx.input.id) : null;
@@ -312,12 +359,25 @@ export function createPlugin(options: RevisionPluginOptions): ResolvedPlugin {
 			return { guia: { ...guia, id } };
 		}),
 		"guias/borrar": adminRoute(schemas.id, async (ctx) => {
+			if (ctx.input.id === GUIA_APRENDIDA_ID) {
+				throw PluginRouteError.badRequest("Esta guía se actualiza sola: retira sus criterios uno a uno o desactiva el aprendizaje en Ajustes.");
+			}
 			await collections(ctx).guias.delete(ctx.input.id);
 			return { ok: true };
 		}),
-		"ajustes/get": adminRoute(schemas.vacio, async (ctx) => ajustesVista(ctx)),
+		"ajustes/get": adminRoute(schemas.vacio, async (ctx) => {
+			await asegurarCronDiario(ctx);
+			return ajustesVista(ctx);
+		}),
 		"ajustes/guardar": adminRoute(schemas.ajustes, async (ctx) => {
-			await guardarAjustes(ctx, ctx.input);
+			const antes = await leerAjustes(ctx);
+			const nuevos = await guardarAjustes(ctx, ctx.input);
+			if (ctx.input.aprenderAuto !== undefined || ctx.input.horaAprendizaje !== undefined) {
+				await asegurarCronDiario(ctx, nuevos);
+			}
+			if (nuevos.nombreGuiaAprendida !== antes.nombreGuiaAprendida && (await collections(ctx).guias.get(GUIA_APRENDIDA_ID))) {
+				await regenerarGuia(entorno(ctx));
+			}
 			return ajustesVista(ctx);
 		}),
 		"ajustes/clave": adminRoute(z.object({ clave: z.string().min(1).max(500) }), async (ctx) => {
@@ -332,12 +392,27 @@ export function createPlugin(options: RevisionPluginOptions): ResolvedPlugin {
 			importarPreguntas(entorno(ctx), ctx.user, ctx.input.preguntas),
 		),
 
+		// ── Aprendizaje: la guía que aprende de la revisora ──
+		"aprendizaje/estado": adminRoute(schemas.vacio, async (ctx) => estadoAprendizaje(entorno(ctx))),
+		"aprendizaje/actualizar": adminRoute(schemas.vacio, async (ctx) => actualizarAhora(entorno(ctx))),
+		"aprendizaje/retirar": adminRoute(schemas.id, async (ctx) =>
+			retirarAprendizaje(entorno(ctx), requireUser(ctx), ctx.input.id),
+		),
+		"aprendizaje/historial": adminRoute(schemas.vacio, async (ctx) => listarHistorialGuia(ctx)),
+		"aprendizaje/restaurar": adminRoute(schemas.id, async (ctx) =>
+			restaurarHistorialGuia(entorno(ctx), requireUser(ctx), ctx.input.id),
+		),
+
 		// ── Motor B (Claude Code por MCP) ──
 		"mcp/cola": adminRoute(schemas.vacio, async (ctx) => cola(entorno(ctx))),
 		"mcp/reclamar": adminRoute(schemas.reclamar, async (ctx) => reclamar(entorno(ctx), ctx.input.trabajoId)),
 		"mcp/articulo": adminRoute(schemas.trabajoId, async (ctx) => articuloDeTrabajo(entorno(ctx), ctx.input.trabajoId)),
 		"mcp/entregar": adminRoute(schemas.entregar, async (ctx) =>
 			entregar(entorno(ctx), ctx.input.trabajoId, { ops: ctx.input.ops, resoluciones: ctx.input.resoluciones }),
+		),
+		"mcp/aprendizaje-pendiente": adminRoute(schemas.vacio, async (ctx) => pendienteParaAgente(entorno(ctx))),
+		"mcp/aprendizaje-aplicar": adminRoute(schemas.aplicarAprendizaje, async (ctx) =>
+			aplicarDeAgente(entorno(ctx), ctx.input, ctx.user?.id ?? null),
 		),
 	};
 
@@ -371,7 +446,9 @@ export function createPlugin(options: RevisionPluginOptions): ResolvedPlugin {
 					const e = await leerEntrada(env, event.collection, id);
 					// Edición en el editor nativo: copia del estado anterior antes de sincronizar.
 					if (esEdicionExterna(env, event.collection, e.id, rev.hash, e.hash)) {
-						await copiaDeEdicionExterna(env, e, rev.hash, event.actor?.id ?? null);
+						const anterior = await copiaDeEdicionExterna(env, e, rev.hash, event.actor?.id ?? null);
+						// Si la edita una revisora, es una corrección de la que aprender.
+						await senalDeEdicion(env, event.actor, event.collection, e.id, anterior, e.doc);
 					}
 					await sincronizar(env, event.collection, e.id, e.doc, e.hash);
 				},
@@ -397,14 +474,34 @@ export function createPlugin(options: RevisionPluginOptions): ResolvedPlugin {
 				timeout: 9 * 60 * 1000,
 				errorPolicy: "continue",
 				handler: async (event, ctx) => {
+					if (await alCron(entorno(ctx), event.name)) return;
 					if (!event.name.startsWith("trabajo-")) return;
 					const trabajoId = typeof event.data?.trabajoId === "string" ? event.data.trabajoId : null;
 					if (!trabajoId) return;
 					await ejecutarTrabajoApi(entorno(ctx), trabajoId);
 				},
 			},
+			"plugin:install": {
+				errorPolicy: "continue",
+				handler: async (_event, ctx) => {
+					await asegurarCronDiario(ctx, undefined, true);
+				},
+			},
+			"plugin:activate": {
+				errorPolicy: "continue",
+				handler: async (_event, ctx) => {
+					await asegurarCronDiario(ctx, undefined, true);
+				},
+			},
 			"plugin:uninstall": {
 				handler: async (event, ctx) => {
+					for (const nombre of [CRON_DIARIO, CRON_PRONTO, CRON_AHORA]) {
+						try {
+							await ctx.cron?.cancel(nombre);
+						} catch {
+							/* no estaba programado */
+						}
+					}
 					if (!event.deleteData) return;
 					await borrarTodo(ctx);
 				},
@@ -441,6 +538,20 @@ export function createPlugin(options: RevisionPluginOptions): ResolvedPlugin {
 						"Entrega la corrección de un trabajo reclamado: `ops` (reemplazar, insertar_tras, eliminar o campo, cada una con los comentarioIds a los que responde) y `resoluciones` (por comentario: aplicado o descartado, con una nota). Guarda los cambios en el borrador para la segunda revisión; no aprueba ni publica. Idempotente. Si el texto cambió desde que se reclamó, devuelve estado «conflicto» sin aplicar nada.",
 					route: "mcp/entregar",
 					input: schemas.entregar,
+					destructive: true,
+				},
+				revision_aprendizaje_pendiente: {
+					description:
+						"Devuelve las correcciones de la revisora pendientes de aprender (señales, hasta 80), las guías de redacción, los criterios aprendidos (activos y retirados) y las instrucciones para sacar criterios generales. Devuelve {vacio:true} si no hay nada pendiente.",
+					route: "mcp/aprendizaje-pendiente",
+					input: z.object({}),
+					destructive: false,
+				},
+				revision_aprendizaje_aplicar: {
+					description:
+						"Aplica a la guía aprendida las `operaciones` (añadir, modificar o retirar criterios, cada una con las señales que la justifican) y un `resumen`. Valida ids y señales, guarda la versión anterior de la guía, la regenera, marca como aprendidas las señales del último lote y avisa por correo.",
+					route: "mcp/aprendizaje-aplicar",
+					input: schemas.aplicarAprendizaje,
 					destructive: true,
 				},
 			},

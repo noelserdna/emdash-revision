@@ -14,6 +14,8 @@ import type {
 	ComentarioVista,
 	DocRevisable,
 	Esfuerzo,
+	EstadoAprendizajeVista,
+	GuiaHistorialVista,
 	GuiaDoc,
 	HistorialVista,
 	InicioVista,
@@ -101,7 +103,7 @@ export const api = {
 		keepalive = false,
 	) => llamar<{ ok: true }>("lectura/guardar", c, { keepalive }),
 	crearComentario: (
-		c: Clave & { texto: string; textoPropuesto?: string; ancla: Ancla | null; fragmento?: string; parentId?: string },
+		c: Clave & { texto: string; textoPropuesto?: string; ancla: Ancla | null; fragmento?: string; parentId?: string; general?: boolean },
 	) => llamar<{ comentario: ComentarioVista; revision: RevisionDoc }>("comentarios/crear", c),
 	editarComentario: (b: { id: string; texto: string; textoPropuesto?: string | null }) =>
 		llamar<{ comentario: ComentarioVista }>("comentarios/editar", b),
@@ -135,6 +137,14 @@ export const api = {
 	guardarClave: (clave: string) =>
 		llamar<AjustesVista & { comprobacion: "valida" | "sin_comprobar" }>("ajustes/clave", { clave }),
 	borrarClave: () => llamar<AjustesVista>("ajustes/clave-borrar"),
+	estadoAprendizaje: () => llamar<EstadoAprendizajeVista>("aprendizaje/estado"),
+	actualizarAprendizaje: () =>
+		llamar<{ programado: boolean; motivo: "sin_clave" | "tope" | "sin_senales" | null; estado: EstadoAprendizajeVista }>(
+			"aprendizaje/actualizar",
+		),
+	retirarAprendizaje: (id: string) => llamar<EstadoAprendizajeVista>("aprendizaje/retirar", { id }),
+	historialGuia: () => llamar<{ versiones: GuiaHistorialVista[] }>("aprendizaje/historial"),
+	restaurarGuia: (id: string) => llamar<EstadoAprendizajeVista>("aprendizaje/restaurar", { id }),
 };
 
 // ─── URLs del panel ──────────────────────────────────────────────────────────
@@ -148,8 +158,8 @@ export function urlArticulo(c: Clave): string {
 	return `${ADMIN_BASE}/articulo?${q.toString()}`;
 }
 
-export function urlGuias(): string {
-	return `${ADMIN_BASE}/guias`;
+export function urlGuias(guia?: string): string {
+	return `${ADMIN_BASE}/guias${guia ? `?guia=${encodeURIComponent(guia)}` : ""}`;
 }
 
 export function urlAjustes(): string {

@@ -33,3 +33,7 @@ export function enlaceArticulo(ctx: PluginContext, collection: string, id: strin
 		`/_emdash/admin/plugins/emdash-revision/articulo?collection=${encodeURIComponent(collection)}&id=${encodeURIComponent(id)}`,
 	);
 }
+
+export function enlaceGuias(ctx: PluginContext, guia?: string): string {
+	return ctx.url(`/_emdash/admin/plugins/emdash-revision/guias${guia ? `?guia=${encodeURIComponent(guia)}` : ""}`);
+}

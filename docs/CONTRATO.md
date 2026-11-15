@@ -9,8 +9,8 @@ Reparto de ficheros (cada agente toca solo los suyos):
 | Agente | Ficheros |
 |---|---|
 | Librerías | `src/lib/{bloques,anclas,ops,diff,sensibles,hash}.ts`, `test/{bloques,anclas,ops,diff,sensibles}.test.ts`, `test/fixtures/` |
-| Motor IA | `src/lib/{prompt,motor-api,costes}.ts`, `test/{prompt,motor-api}.test.ts` |
-| Servidor | `src/plugin.ts`, `src/lib/{acceso,contenido,revisiones,comentarios,trabajos,preguntas,correo,ajustes}.ts`, `test/helpers.ts`, `test/servidor-*.test.ts`, `skills/aplicar-revision/SKILL.md` |
+| Motor IA | `src/lib/{prompt,prompt-aprendizaje,motor-api,costes}.ts`, `test/{prompt,motor-api}.test.ts` |
+| Servidor | `src/plugin.ts`, `src/lib/{acceso,contenido,revisiones,comentarios,trabajos,preguntas,correo,ajustes,aprendizaje}.ts`, `test/helpers.ts`, `test/servidor-*.test.ts`, `skills/*/SKILL.md` |
 | Panel | `src/admin.tsx`, `src/admin/**` |
 
 ## 1. Portable Text del sitio
@@ -129,6 +129,8 @@ export function costeDe(modelo: ModeloId, uso: UsoIA): number;
 export interface ResultadoMotor { salida: SalidaCorreccion; usage: UsoIA; coste: number; modelo: string }
 export class ErrorMotor extends Error { constructor(mensaje: string, readonly codigo: "sin_clave" | "rechazo" | "truncado" | "salida_invalida" | "api") }
 export function corregirConApi(entrada: EntradaCorreccion, opts: { apiKey: string; modelo: ModeloId; esfuerzo: Esfuerzo; fetch?: typeof fetch; cliente?: unknown }): Promise<ResultadoMotor>;
+/** Síntesis de la guía aprendida: misma llamada, esquema ESQUEMA_SALIDA_APRENDIZAJE (prompt-aprendizaje.ts). */
+export function aprenderConApi(entrada: EntradaAprendizaje, opts: OpcionesMotor): Promise<{ salida: SalidaAprendizaje; usage: UsoIA; coste: number; modelo: string }>;
 ```
 
 Llamada: `@anthropic-ai/sdk`, `client.beta.messages.stream({...}).finalMessage()`, `thinking: {type: "adaptive"}`, `output_config: { effort, format: { type: "json_schema", schema: ESQUEMA_SALIDA } }`, `max_tokens: 32000`, `betas: ["server-side-fallback-2026-07-01"]` y `fallbacks: "default"` salvo con `claude-haiku-5-5`, `system` con `cache_control` en el bloque de guías. Sin herramientas. Comprobar `stop_reason` (`refusal` → `rechazo`, `max_tokens` → `truncado`) antes de parsear. El contenido y los comentarios van delimitados como datos (`<articulo>`, `<comentarios>`), con la instrucción de no obedecer órdenes que aparezcan dentro.
@@ -148,7 +150,7 @@ Todas las rutas son POST JSON. `M` = `plugins:read` (editora), `A` = `plugins:ma
 | `inicio` | M | `{}` | `InicioVista` |
 | `articulo/get` | M | `{collection, id}` | `ArticuloVista` |
 | `lectura/guardar` | M | `{collection, id, bloquesVistos: string[], posicion: string\|null, completada: boolean}` | `{ok: true}` |
-| `comentarios/crear` | M | `{collection, id, texto, textoPropuesto?, ancla: Ancla\|null, fragmento?: string, parentId?}` | `{comentario: ComentarioVista, revision: RevisionDoc}` |
+| `comentarios/crear` | M | `{collection, id, texto, textoPropuesto?, ancla: Ancla\|null, fragmento?: string, parentId?, general?: boolean}` | `{comentario: ComentarioVista, revision: RevisionDoc}` |
 | `comentarios/editar` | M | `{id, texto, textoPropuesto?}` | `{comentario}` |
 | `comentarios/estado` | M | `{id, estado: "abierto"\|"descartado"}` | `{comentario, revision}` |
 | `comentarios/borrar` | M | `{id}` | `{ok: true, revision}` |
@@ -190,7 +192,31 @@ Reglas del historial (colección `versiones`, tipo `VersionDoc`, lógica en `src
 - **Restaurar:** copia del texto actual (rotando), escribe el `doc` de la versión en el borrador, re-ancla los comentarios abiertos (huérfanos si ya no encajan), marca la aprobación «cambiado después» si el hash difiere, auditoría `restaurar`. Con `publicar`, después llama a `publicar()` con las mismas reglas de rol y `requiereAprobacion`.
 - **Purga:** `content:afterDelete` permanente y `plugin:uninstall` con `deleteData` borran también las versiones.
 
-Herramientas MCP (`mcp.tools`): `revision_cola`, `revision_reclamar`, `revision_articulo`, `revision_entregar` (`destructive: true`), cada una sobre su ruta `mcp/*`.
+### Aprendizaje
+
+La guía de redacción aprende sola de lo que corrige la revisora, sin paso de aprobación. Lógica en `src/lib/aprendizaje.ts` (servidor) y `src/lib/prompt-aprendizaje.ts` (pura: prompt, esquema y `validarSalidaAprendizaje`). Tipos `SenalDoc`, `AprendizajeDoc`, `GuiaHistorialDoc`, `SalidaAprendizaje`, `EntradaAprendizaje` y `EstadoAprendizajeVista` en `types.ts`.
+
+| Ruta | Perm. | Entrada | Salida |
+|---|---|---|---|
+| `aprendizaje/estado` | A | `{}` | `EstadoAprendizajeVista`: guía, señales pendientes, última actualización y resumen, `parado` (`sin_clave`, `tope`, `desactivado` o null), error, `enCurso`, criterios activos y retirados |
+| `aprendizaje/actualizar` | A | `{}` («Actualizar ahora») | `{programado: boolean, motivo: "sin_clave"\|"tope"\|"sin_senales"\|null, estado}`; programa la síntesis por cron a 2 s |
+| `aprendizaje/retirar` | A | `{id}` | `EstadoAprendizajeVista` |
+| `aprendizaje/historial` | A | `{}` | `{versiones: GuiaHistorialVista[]}` (de la más reciente a la más antigua) |
+| `aprendizaje/restaurar` | A | `{id}` | `EstadoAprendizajeVista` |
+| `mcp/aprendizaje-pendiente` | A | `{}` | `{entrada: EntradaAprendizaje, lote: string[], pendientes, instrucciones}` o `{vacio: true, pendientes: 0}` |
+| `mcp/aprendizaje-aplicar` | A | `{operaciones, resumen, lote?}` | `{añadidos, modificados, retirados, procesadas, resumen}` |
+
+Reglas:
+- **Señales** (colección `senales`, índices `fecha`, `procesada`, `entryId`, `[procesada, fecha]`): una por acción de una **revisora** = usuario con `role >= ajustes.rolAprueba` que no es administrador (o también administradores con `aprenderDeAdministradores`). Tipos: `comentario` (texto, texto propuesto en `despues`, `cita` y `campo` del ancla, `general`), `cambiar_ya` (completa la señal del mismo comentario, `ref` = id del comentario: `antes` = cita, `despues` = propuesto), `no_es_esto` y `deshacer` (solo sobre cambios de la IA, `trabajoId` no nulo: `antes`/`despues` en texto plano y la nota), `respuesta` (pregunta en `texto`, respuesta en `despues`, «Afecta a N artículos» en `nota`; `luego` no cuenta) y `edicion` (`content:afterSave` externo; la revisora se reconoce por `event.actor.role`, confirmado con `ctx.users.get`; resumen por bloque frente a la revisión anterior que encuentra `copiaDeEdicionExterna`, como mucho 3 bloques y 1.500 caracteres). Textos recortados (1.000 caracteres; cita 500; título 300). `registrarSenal` nunca lanza.
+- **Casilla** «Esto vale para todos los artículos» en el formulario de comentario: `general: true` en el comentario y en la señal.
+- **Guía automática**: id fijo `aprendido` en `guias`, `automatica: true`, nombre `ajustes.nombreGuiaAprendida`, `orden` = el de la primera guía + 0,5 (las demás son enteras, así que queda justo detrás). Su Markdown se genera siempre desde los `aprendizajes` activos, agrupados por tema: `- {texto} (desde el {fecha}; visto en: «título», …)`. `guias/guardar` y `guias/borrar` la rechazan. Como está en `guias`, llega a `EntradaCorreccion.guias` (motor A y B) sin más cambios.
+- **Síntesis** (`sintetizarConApi`): cron diario `aprendizaje` (`0 {horaAprendizaje} * * *`, UTC, 3 por defecto) y tarea única `aprendizaje-pronto` a los 10 minutos de cada «Aprobar» y de cada señal `general` (antirrebote: no se programa otra si ya hay una pendiente en `kv` `aprendizaje:pronto`). El cron diario se registra en `plugin:install`/`plugin:activate` y, para sitios ya instalados, de forma perezosa en `inicio`, `ajustes/get`, `ajustes/guardar` (si cambian `aprenderAuto` u `horaAprendizaje`) y `aprendizaje/estado`. Sin `aprenderAuto` (salvo «Actualizar ahora»), sin clave o con el tope alcanzado no hace nada: las señales se acumulan. Bloqueo en `kv` `aprendizaje:bloqueo` (15 min). Toma hasta 80 señales no procesadas (por fecha), todas las guías y los aprendizajes activos y retirados, y llama a `aprenderConApi` (mismo cliente, modelo y esfuerzo de los ajustes, `fallbacks`, `stop_reason` y coste que el motor A; el gasto se suma aunque la salida no valga).
+- **Salida**: `{operaciones: Array<{op: "añadir"|"modificar"|"retirar", id?, texto?, tema?, senales: string[]}>, resumen}`. Validación: forma y textos (no vacíos, < 600 caracteres) en `validarSalidaAprendizaje`; en el servidor, ids existentes en `modificar`/`retirar`, señales existentes, y un criterio retirado por una persona solo se reactiva con una señal `general`. Si falla, no se aplica nada, las señales siguen pendientes y el error queda en el estado.
+- **Aplicar** (`aplicarAprendizaje`, común a API y MCP): guarda la versión anterior en `guias_historial` (markdown + conjunto de aprendizajes; últimas 20), aplica, regenera la guía, marca procesadas todas las señales del lote (se usen o no), auditoría `aprender`, correo a `ajustes.avisarA` con los criterios añadidos, modificados y retirados y el enlace a la página de guías.
+- **Retirar a mano**: `estado: "retirado"`, `retiradoPor` = nombre; se guarda versión antes. **Restaurar**: guarda la actual y repone el markdown y los aprendizajes de la versión.
+- **Ajustes nuevos**: `aprenderAuto` (true), `horaAprendizaje` (3), `aprenderDeAdministradores` (false), `nombreGuiaAprendida` («Aprendido de las correcciones de la revisora»).
+
+Herramientas MCP (`mcp.tools`): `revision_cola`, `revision_reclamar`, `revision_articulo`, `revision_entregar` (`destructive: true`), `revision_aprendizaje_pendiente` y `revision_aprendizaje_aplicar` (`destructive: true`), cada una sobre su ruta `mcp/*`. Skills: `skills/aplicar-revision` y `skills/aprender-de-la-revisora`.
 
 Reglas de negocio:
 - **Leer** con `ctx.content.getVersioned` (borrador fusionado). El documento revisable se arma con los campos de `options.collections[collection]`. Antes de usar `content` se pasa por `normalizarClaves`; si cambió y hay que anclar, se guarda.
@@ -217,6 +243,9 @@ Tests del servidor con fakes en memoria (`test/helpers.ts`; hay una copia de ref
 ```ts
 export const pages: PluginAdminExports["pages"] = { "/": InicioPage, "/articulo": ArticuloPage, "/guias": GuiasPage, "/ajustes": AjustesPage };
 ```
+
+- `GuiasPage` muestra la guía `aprendido` (marcada «Se actualiza sola», `?guia=aprendido` la abre) con `GuiaAprendida.tsx`: de solo lectura, criterios por tema con fecha y «Visto en» (enlaces a los artículos), «Retirar» con confirmación, «Actualizar ahora» (sondea el estado cada 4 s mientras la IA trabaja; sin clave, explica cómo hacerlo con Claude Code) e «Historial de la guía» con «Restaurar».
+- `AjustesPage`, sección «Aprendizaje»: automático, hora diaria (UTC), incluir administradores y nombre de la guía. `Compositor`: casilla «Esto vale para todos los artículos».
 
 - Llamadas con `apiFetch` y `parseApiResponse` de `emdash/plugin-utils` (como en emdash-buzon). Base `/_emdash/api/plugins/emdash-revision`. Navegación: `/_emdash/admin/plugins/emdash-revision/articulo?collection=posts&id=…` (ver cómo buzon lee parámetros y navega).
 - Sin dependencias nuevas: React 19, CSS propio con prefijo `rv-` inyectado una vez (patrón `emdash-buzon/src/admin/styles.ts`), consumiendo las variables del admin `--color-kumo-*` y `--text-color-kumo-*` con valores de reserva. Iconos SVG en línea. Diálogos con `<dialog>` nativo.

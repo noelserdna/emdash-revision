@@ -8,13 +8,16 @@
 import type { PluginContext, StorageCollection } from "emdash";
 
 import type {
+	AprendizajeDoc,
 	AuditoriaDoc,
 	CambioDoc,
 	ComentarioDoc,
 	GuiaDoc,
+	GuiaHistorialDoc,
 	LecturaDoc,
 	ReglaDoc,
 	RevisionDoc,
+	SenalDoc,
 	TrabajoDoc,
 	VersionDoc,
 } from "./types.js";
@@ -28,7 +31,18 @@ export interface CollectionConfig {
 }
 
 export const STORAGE: Record<
-	"revisiones" | "lecturas" | "comentarios" | "reglas" | "trabajos" | "cambios" | "guias" | "auditoria" | "versiones",
+	"revisiones"
+	| "lecturas"
+	| "comentarios"
+	| "reglas"
+	| "trabajos"
+	| "cambios"
+	| "guias"
+	| "auditoria"
+	| "versiones"
+	| "senales"
+	| "aprendizajes"
+	| "guias_historial",
 	CollectionConfig
 > = {
 	revisiones: { indexes: ["collection", "estado", "actualizado"] },
@@ -42,6 +56,9 @@ export const STORAGE: Record<
 	guias: { indexes: ["orden"] },
 	auditoria: { indexes: ["entryId", "fecha", ["entryId", "fecha"]] },
 	versiones: { indexes: ["entryId", "tipo", "fecha", ["entryId", "tipo", "fecha"]] },
+	senales: { indexes: ["fecha", "procesada", "entryId", ["procesada", "fecha"]] },
+	aprendizajes: { indexes: ["estado", "creado"] },
+	guias_historial: { indexes: ["fecha"] },
 };
 
 /** Índices planos para el descriptor (el manifest no admite compuestos). */
@@ -62,6 +79,9 @@ export type Collections = {
 	guias: StorageCollection<GuiaDoc>;
 	auditoria: StorageCollection<AuditoriaDoc>;
 	versiones: StorageCollection<VersionDoc>;
+	senales: StorageCollection<SenalDoc>;
+	aprendizajes: StorageCollection<AprendizajeDoc>;
+	guias_historial: StorageCollection<GuiaHistorialDoc>;
 };
 
 /** Storage tipado a partir del contexto del plugin. */

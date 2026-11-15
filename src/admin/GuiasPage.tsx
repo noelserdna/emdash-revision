@@ -4,9 +4,10 @@
 
 import * as React from "react";
 
-import type { GuiaDoc } from "../lib/types.js";
+import { GUIA_APRENDIDA_ID, type GuiaDoc } from "../lib/types.js";
 import { api, esSinPermiso, urlInicio } from "./api.js";
 import { Aviso, AvisoError, Raiz, useAnuncio } from "./comun.js";
+import { GuiaAprendida } from "./GuiaAprendida.js";
 import { Dialogo } from "./Dialogo.js";
 import { Icono } from "./iconos.js";
 import { T } from "./textos.js";
@@ -18,6 +19,10 @@ interface Borrador {
 	nombre: string;
 	markdown: string;
 	orden: number;
+}
+
+function esAutomatica(g: Guia): boolean {
+	return !!g.automatica || g.id === GUIA_APRENDIDA_ID;
 }
 
 export function GuiasPage() {
@@ -57,7 +62,13 @@ function Guias() {
 
 	React.useEffect(() => {
 		void cargar().then((l) => {
-			const g = l?.[0];
+			let pedida: string | null = null;
+			try {
+				pedida = new URLSearchParams(window.location.search).get("guia");
+			} catch {
+				/* sin URL */
+			}
+			const g = (pedida ? l?.find((x) => x.id === pedida) : undefined) ?? l?.[0];
 			if (g) setBorrador({ id: g.id, nombre: g.nombre, markdown: g.markdown, orden: g.orden });
 		});
 	}, [cargar]);
@@ -170,7 +181,10 @@ function Guias() {
 									onClick={() => elegir(g)}
 								>
 									<Icono nombre="libro" tam={16} />
-									{g.nombre}
+									<span style={{ display: "grid", gap: "0.125rem", textAlign: "start" }}>
+										<span>{g.nombre}</span>
+										{esAutomatica(g) ? <span className="rv-ayuda">{T.apSeActualiza}</span> : null}
+									</span>
 								</button>
 							</li>
 						))}
@@ -181,7 +195,9 @@ function Guias() {
 						</button>
 					</div>
 				</nav>
-				{borrador ? (
+				{borrador && borrador.id === GUIA_APRENDIDA_ID ? (
+					<GuiaAprendida />
+				) : borrador ? (
 					<form
 						className="rv-tarjeta"
 						noValidate

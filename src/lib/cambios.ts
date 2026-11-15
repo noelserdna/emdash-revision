@@ -6,6 +6,7 @@
 import { PluginRouteError } from "emdash";
 
 import { nombreDe, type Usuario } from "./acceso.js";
+import { autorDe, registrarSenal, textoDeCambio } from "./aprendizaje.js";
 import { crearAncla } from "./anclas.js";
 import { escribirDoc, leerParaAnclar, type Entorno } from "./contenido.js";
 import { deshacerCambio } from "./ops.js";
@@ -102,6 +103,7 @@ export async function darVeredicto(
 	const nota = input.nota?.trim() || null;
 	let doc: DocRevisable | undefined;
 	let hashNuevo: string | null = null;
+	let titulo: string | null = null;
 
 	switch (input.veredicto) {
 		case "pendiente":
@@ -123,6 +125,7 @@ export async function darVeredicto(
 				throw PluginRouteError.conflict("Ya no se puede deshacer: el texto ha cambiado después. Deja un comentario.");
 			}
 			const guardada = await escribirDoc(env, entrada, deshecho, "Antes de deshacer un cambio");
+			titulo = guardada.doc.titulo;
 			doc = guardada.doc;
 			hashNuevo = guardada.hash;
 			await reabrir(env, user, cambio, nota);
@@ -149,6 +152,20 @@ export async function darVeredicto(
 		hash: revision.hash,
 		detalle: `${input.id}: ${input.veredicto}${nota ? ` — ${nota}` : ""}`,
 	});
+	// Lo que la revisora rechaza o deshace de la IA enseña criterio.
+	if (cambio.trabajoId && (input.veredicto === "no_es_esto" || input.veredicto === "deshecho")) {
+		await registrarSenal(env, autorDe(user), {
+			tipo: input.veredicto === "no_es_esto" ? "no_es_esto" : "deshacer",
+			collection: cambio.collection,
+			entryId: cambio.entryId,
+			titulo,
+			campo: cambio.campo,
+			antes: textoDeCambio(cambio.antes),
+			despues: textoDeCambio(cambio.despues),
+			nota,
+			ref: input.id,
+		});
+	}
 	const out: { cambio: CambioVista; revision: RevisionDoc; doc?: DocRevisable } = { cambio: { ...nuevo, id: input.id }, revision };
 	if (doc) out.doc = doc;
 	return out;

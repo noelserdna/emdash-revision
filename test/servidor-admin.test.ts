@@ -117,20 +117,36 @@ describe("permisos", () => {
 		"mcp/reclamar",
 		"mcp/articulo",
 		"mcp/entregar",
+		"aprendizaje/estado",
+		"aprendizaje/actualizar",
+		"aprendizaje/retirar",
+		"aprendizaje/historial",
+		"aprendizaje/restaurar",
+		"mcp/aprendizaje-pendiente",
+		"mcp/aprendizaje-aplicar",
 	];
 
 	it("cada ruta declara su permiso: plugins:manage para administración, plugins:read para la revisora", () => {
 		for (const [nombre, ruta] of Object.entries(plugin.routes)) {
 			expect(ruta.permission, nombre).toBe(ADMIN_RUTAS.includes(nombre) ? "plugins:manage" : "plugins:read");
 		}
-		expect(Object.keys(plugin.routes)).toHaveLength(33);
+		expect(Object.keys(plugin.routes)).toHaveLength(40);
 	});
 
-	it("las herramientas MCP apuntan a rutas de administración y solo entregar es destructiva", () => {
+	it("las herramientas MCP apuntan a rutas de administración y solo las que escriben son destructivas", () => {
 		const tools = plugin.mcp!.tools;
-		expect(Object.keys(tools).sort()).toEqual(["revision_articulo", "revision_cola", "revision_entregar", "revision_reclamar"]);
+		expect(Object.keys(tools).sort()).toEqual([
+			"revision_aprendizaje_aplicar",
+			"revision_aprendizaje_pendiente",
+			"revision_articulo",
+			"revision_cola",
+			"revision_entregar",
+			"revision_reclamar",
+		]);
 		for (const t of Object.values(tools)) expect(plugin.routes[t.route]?.permission).toBe("plugins:manage");
 		expect(tools.revision_entregar!.destructive).toBe(true);
+		expect(tools.revision_aprendizaje_aplicar!.destructive).toBe(true);
+		expect(tools.revision_aprendizaje_pendiente!.destructive).toBe(false);
 		expect(tools.revision_cola!.destructive).toBe(false);
 	});
 
