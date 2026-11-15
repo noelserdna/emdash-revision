@@ -1,0 +1,1736 @@
+{
+	"titulo": "Fezolinetant (Veoza) en España: para quién es, cuánto cuesta, cuándo lo financia la sanidad pública y qué análisis del hígado exige",
+	"extracto": "Qué es Veoza, cuánto reduce los sofocos, a quién se lo financia la sanidad pública desde 2026 y qué análisis de hígado pedir antes y durante el tratamiento.",
+	"referencias": "1. Agencia Española de Medicamentos y Productos Sanitarios (AEMPS), CIMA. Veoza 45 mg comprimidos recubiertos con película (fezolinetant): ficha técnica. https://cima.aemps.es/cima/dochtml/ft/1231771001/FT_1231771001.html (consultado el 12 de noviembre de 2026).\n2. Agencia Europea de Medicamentos (EMA). Veoza (fezolinetant): informe público europeo de evaluación (EPAR). Autorización del 7 de diciembre de 2023; página actualizada el 21 de agosto de 2026. https://www.ema.europa.eu/en/medicines/human/EPAR/veoza (consultado el 12 de noviembre de 2026).\n3. AEMPS. Fezolinetant (Veoza): nuevas recomendaciones para prevenir el daño hepático. Nota de seguridad MUH(FV) 06/2024, 2 de diciembre de 2024. https://www.aemps.gob.es/informa/fezolinetant-veoza-nuevas-recomendaciones-para-prevenir-el-dano-hepatico/ (consultado el 12 de noviembre de 2026).\n4. FDA (EE. UU.). FDA adds warning about rare occurrence of serious liver injury with use of Veozah (fezolinetant) for hot flashes due to menopause. Drug Safety Communication, 12 de septiembre de 2024, actualizada el 16 de diciembre de 2024. https://www.fda.gov/drugs/drug-safety-communications/fda-adds-warning-about-rare-occurrence-serious-liver-injury-use-veozah-fezolinetant-hot-flashes-due (consultado el 12 de noviembre de 2026).\n5. Ministerio de Sanidad. BIFIMED: situación de financiación de Veoza 45 mg comprimidos recubiertos con película, 28 comprimidos (CN 763922). Nomenclátor de noviembre de 2026. https://www.sanidad.gob.es/profesionales/medicamentos.do?metodo=verDetalle&cn=763922 (consultado el 12 de noviembre de 2026).\n6. NICE (Reino Unido). Fezolinetant for treating moderate to severe vasomotor symptoms associated with menopause (TA1143). 31 de marzo de 2026. https://www.nice.org.uk/guidance/ta1143/chapter/1-Recommendation (consultado el 12 de noviembre de 2026).\n7. The Menopause Society. The 2023 Nonhormone Therapy Position Statement of The North American Menopause Society. Menopause. 2023. https://menopause.org/wp-content/uploads/professional/2023-nonhormone-therapy-position-statement.pdf (consultado el 12 de noviembre de 2026).\n8. NICE (Reino Unido). Menopause: identification and management (NG23). Recommendations. 2015, actualizada 2024-2026. https://www.nice.org.uk/guidance/ng23/chapter/Recommendations (consultado el 12 de noviembre de 2026).\n9. Boletín Oficial del Estado. Real Decreto Legislativo 1/2015, de 24 de julio, texto refundido de la Ley de garantías y uso racional de los medicamentos y productos sanitarios (texto consolidado, artículo 102, en la redacción de los Reales Decretos-leyes 11/2026, de 12 de mayo, y 12/2026, de 26 de mayo). https://www.boe.es/buscar/act.php?id=BOE-A-2015-8343 (consultado el 12 de noviembre de 2026).\n10. Agencia Europea de Medicamentos (EMA). Lynkuet (elinzanetant): informe público europeo de evaluación (EPAR). Autorización del 17 de noviembre de 2025. https://www.ema.europa.eu/en/medicines/human/EPAR/lynkuet (consultado el 12 de noviembre de 2026).\n11. AEMPS, CIMA. Lynkuet 60 mg cápsulas blandas, n.º de registro 1251991001: estado de comercialización. https://cima.aemps.es/cima/publico/detalle.html?nregistro=1251991001 (consultado el 12 de noviembre de 2026).\n12. Ministerio de Sanidad. Nomenclátor de facturación: Veoza 45 mg comprimidos recubiertos con película, 28 comprimidos (CN 763922). Precio de venta al público con IVA y fecha de alta. https://www.sanidad.gob.es/profesionales/nomenclator.do?metodo=verDetalle&prod=763922 (consultado el 12 de noviembre de 2026).\n13. Boletín Oficial del Estado. Real Decreto 618/2007, de 11 de mayo, por el que se regula el procedimiento para el establecimiento, mediante visado, de reservas singulares a las condiciones de prescripción y dispensación de los medicamentos (artículo 2.3). https://www.boe.es/buscar/act.php?id=BOE-A-2007-9692 (consultado el 12 de noviembre de 2026).",
+	"content": [
+		{
+			"_type": "block",
+			"_key": "k00001",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k00002",
+					"text": "Si los sofocos (bochornos, calores) te despiertan varias veces cada noche y no puedes usar hormonas, o prefieres no usarlas, es probable que hayas oído hablar de Veoza y leído dos cosas a la vez: que funciona y que puede dañar el hígado. Las dos tienen fundamento, y querer entenderlas antes de decidir es lo sensato. Esta ficha reúne lo que dicen las agencias para que llegues a la consulta sabiendo qué pedir.",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k00003",
+			"style": "blockquote",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k00004",
+					"text": "En treinta segundos",
+					"marks": [
+						"strong"
+					]
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k00005",
+			"style": "blockquote",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k00006",
+					"text": "• El fezolinetant (Veoza) es un comprimido diario sin hormonas que bloquea en el cerebro la señal que dispara el sofoco [1][2].",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k00007",
+			"style": "blockquote",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k00008",
+					"text": "• En los ensayos, las mujeres pasaron de unos 11 sofocos intensos al día a unos 4 a las doce semanas; con placebo quedaron en unos 7 [1].",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k00009",
+			"style": "blockquote",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0000a",
+					"text": "• Puede dañar el hígado, rara vez de forma grave: exige un análisis antes de empezar y uno al mes los tres primeros meses [1][3].",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0000b",
+			"style": "blockquote",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0000c",
+					"text": "• La sanidad pública lo financia desde el 1 de septiembre de 2026, con visado (una autorización previa), solo si llevas doce meses sin regla y tienes contraindicada la terapia hormonal [5]. Si no, lo pagas entero.",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0000d",
+			"style": "blockquote",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0000e",
+					"text": "• Si lo tomas y notas piel u ojos amarillos, orina oscura, picor o un cansancio inusual, deja de tomarlo y consulta ese mismo día [3][4].",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0000f",
+			"style": "h2",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0000g",
+					"text": "¿Qué es el fezolinetant y cómo actúa?",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0000h",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0000i",
+					"text": "Es un fármaco con receta, sin hormonas, de un comprimido al día, autorizado en la Unión Europea desde el 7 de diciembre de 2023 para los sofocos y sudores nocturnos moderados o graves de la menopausia [1][2].",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0000j",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0000k",
+					"text": "Actúa sobre el termostato del cuerpo, en el hipotálamo (una zona del cerebro). Cuando bajan los estrógenos, unas neuronas liberan allí demasiada neuroquinina B, una sustancia que hace saltar el termostato sin motivo: eso es el ",
+					"marks": []
+				},
+				{
+					"_type": "span",
+					"_key": "k0000m",
+					"text": "sofoco",
+					"marks": [
+						"k0000l"
+					]
+				},
+				{
+					"_type": "span",
+					"_key": "k0000n",
+					"text": ". El fezolinetant ocupa su receptor y amortigua la falsa alarma [1][2]. No aporta estrógenos ni trata la sequedad vaginal o la pérdida de hueso.",
+					"marks": []
+				}
+			],
+			"markDefs": [
+				{
+					"_type": "link",
+					"_key": "k0000l",
+					"href": "/articulos/sofocos-menopausia"
+				}
+			]
+		},
+		{
+			"_type": "block",
+			"_key": "k0000o",
+			"style": "h2",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0000p",
+					"text": "¿Cuánto reduce los sofocos?",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0000q",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0000r",
+					"text": "Reduce los sofocos intensos algo más de la mitad, y parte de esa mejoría también se ve con placebo (un comprimido idéntico sin principio activo): en dos ensayos con más de 1.000 mujeres bajaron un 63 % a las doce semanas, frente a un 40 % con placebo [2].",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0000s",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0000t",
+					"text": "En números de cada día: de unos 11 sofocos moderados o graves al empezar, a las doce semanas quedaban unos 4 con fezolinetant y unos 7 con placebo [1]. El fármaco añade dos o tres sofocos menos al día, y algo menos intensos [1][2].",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0000u",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0000v",
+					"text": "Qué quiere decir:",
+					"marks": [
+						"strong"
+					]
+				},
+				{
+					"_type": "span",
+					"_key": "k0000w",
+					"text": " el efecto es real y se nota desde el primer mes [2].",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "bullet",
+			"level": 1
+		},
+		{
+			"_type": "block",
+			"_key": "k0000x",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0000y",
+					"text": "Qué no quiere decir:",
+					"marks": [
+						"strong"
+					]
+				},
+				{
+					"_type": "span",
+					"_key": "k0000z",
+					"text": " que los elimine. Son medias: a unas mujeres les cambia las noches y otras apenas lo notan. Tampoco que los sofocos sean imaginarios porque el placebo mejore: ocurre en todos los ensayos de sofocos, entre un 20 % y un 66 % [7].",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "bullet",
+			"level": 1
+		},
+		{
+			"_type": "block",
+			"_key": "k00010",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k00011",
+					"text": "Como referencia, la terapia hormonal de la menopausia (THM, también llamada THS, TRH o TH) quita unos 3 de cada 4 sofocos y es el tratamiento más eficaz y el que las guías ofrecen primero [7][8]; son cifras de otros estudios, no una comparación directa.",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k00012",
+			"style": "h2",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k00013",
+					"text": "¿Para quién está indicado y para quién no?",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k00014",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k00015",
+					"text": "Está pensado para mujeres con sofocos moderados o graves que no pueden usar terapia hormonal o deciden no usarla [6].",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "table",
+			"_key": "k00016",
+			"hasHeaderRow": true,
+			"rows": [
+				{
+					"_type": "tableRow",
+					"_key": "k00017",
+					"cells": [
+						{
+							"_type": "tableCell",
+							"_key": "k00019",
+							"content": [
+								{
+									"_type": "span",
+									"_key": "k00018",
+									"text": "Situación",
+									"marks": []
+								}
+							],
+							"markDefs": [],
+							"isHeader": true
+						},
+						{
+							"_type": "tableCell",
+							"_key": "k0001b",
+							"content": [
+								{
+									"_type": "span",
+									"_key": "k0001a",
+									"text": "Qué dice la ficha técnica (el documento oficial del medicamento) [1]",
+									"marks": []
+								}
+							],
+							"markDefs": [],
+							"isHeader": true
+						}
+					]
+				},
+				{
+					"_type": "tableRow",
+					"_key": "k0001c",
+					"cells": [
+						{
+							"_type": "tableCell",
+							"_key": "k0001e",
+							"content": [
+								{
+									"_type": "span",
+									"_key": "k0001d",
+									"text": "Más de 65 años al empezar",
+									"marks": []
+								}
+							],
+							"markDefs": []
+						},
+						{
+							"_type": "tableCell",
+							"_key": "k0001g",
+							"content": [
+								{
+									"_type": "span",
+									"_key": "k0001f",
+									"text": "No se ha estudiado",
+									"marks": []
+								}
+							],
+							"markDefs": []
+						}
+					]
+				},
+				{
+					"_type": "tableRow",
+					"_key": "k0001h",
+					"cells": [
+						{
+							"_type": "tableCell",
+							"_key": "k0001j",
+							"content": [
+								{
+									"_type": "span",
+									"_key": "k0001i",
+									"text": "Insuficiencia (mal funcionamiento) moderada o grave del hígado, o grave del riñón",
+									"marks": []
+								}
+							],
+							"markDefs": []
+						},
+						{
+							"_type": "tableCell",
+							"_key": "k0001l",
+							"content": [
+								{
+									"_type": "span",
+									"_key": "k0001k",
+									"text": "No se recomienda",
+									"marks": []
+								}
+							],
+							"markDefs": []
+						}
+					]
+				},
+				{
+					"_type": "tableRow",
+					"_key": "k0001m",
+					"cells": [
+						{
+							"_type": "tableCell",
+							"_key": "k0001o",
+							"content": [
+								{
+									"_type": "span",
+									"_key": "k0001n",
+									"text": "Embarazo o sospecha de embarazo",
+									"marks": []
+								}
+							],
+							"markDefs": []
+						},
+						{
+							"_type": "tableCell",
+							"_key": "k0001q",
+							"content": [
+								{
+									"_type": "span",
+									"_key": "k0001p",
+									"text": "Contraindicado",
+									"marks": []
+								}
+							],
+							"markDefs": []
+						}
+					]
+				},
+				{
+					"_type": "tableRow",
+					"_key": "k0001r",
+					"cells": [
+						{
+							"_type": "tableCell",
+							"_key": "k0001t",
+							"content": [
+								{
+									"_type": "span",
+									"_key": "k0001s",
+									"text": "Cáncer de mama en tratamiento (incluidos el tamoxifeno y otros antihormonales)",
+									"marks": []
+								}
+							],
+							"markDefs": []
+						},
+						{
+							"_type": "tableCell",
+							"_key": "k0001v",
+							"content": [
+								{
+									"_type": "span",
+									"_key": "k0001u",
+									"text": "No se recomienda: no se ha estudiado",
+									"marks": []
+								}
+							],
+							"markDefs": []
+						}
+					]
+				},
+				{
+					"_type": "tableRow",
+					"_key": "k0001w",
+					"cells": [
+						{
+							"_type": "tableCell",
+							"_key": "k0001y",
+							"content": [
+								{
+									"_type": "span",
+									"_key": "k0001x",
+									"text": "Cáncer de mama ya tratado o antecedentes de convulsiones",
+									"marks": []
+								}
+							],
+							"markDefs": []
+						},
+						{
+							"_type": "tableCell",
+							"_key": "k00020",
+							"content": [
+								{
+									"_type": "span",
+									"_key": "k0001z",
+									"text": "No se ha estudiado; decisión individual",
+									"marks": []
+								}
+							],
+							"markDefs": []
+						}
+					]
+				},
+				{
+					"_type": "tableRow",
+					"_key": "k00021",
+					"cells": [
+						{
+							"_type": "tableCell",
+							"_key": "k00023",
+							"content": [
+								{
+									"_type": "span",
+									"_key": "k00022",
+									"text": "THM con estrógenos a la vez",
+									"marks": []
+								}
+							],
+							"markDefs": []
+						},
+						{
+							"_type": "tableCell",
+							"_key": "k00025",
+							"content": [
+								{
+									"_type": "span",
+									"_key": "k00024",
+									"text": "No se recomienda; el estrógeno vaginal local queda aparte",
+									"marks": []
+								}
+							],
+							"markDefs": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"_type": "block",
+			"_key": "k00026",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k00027",
+					"text": "Los ensayos se hicieron en mujeres de 40 a 65 años con al menos siete sofocos intensos al día [1]. Eso describe a quién se estudió, no un mínimo para recetarlo. Con sofocos leves no se ha estudiado.",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k00028",
+			"style": "h2",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k00029",
+					"text": "¿Qué efectos secundarios tiene?",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0002a",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0002b",
+					"text": "Los más frecuentes son digestivos y de sueño, y la mayoría de las mujeres no los tiene. En los ensayos, con 2.203 mujeres seguidas hasta un año [1]:",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0002c",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0002d",
+					"text": "Diarrea o insomnio:",
+					"marks": [
+						"strong"
+					]
+				},
+				{
+					"_type": "span",
+					"_key": "k0002e",
+					"text": " unas 3 de cada 100 en cada caso.",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "bullet",
+			"level": 1
+		},
+		{
+			"_type": "block",
+			"_key": "k0002f",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0002g",
+					"text": "Dolor abdominal o subida de las transaminasas",
+					"marks": [
+						"strong"
+					]
+				},
+				{
+					"_type": "span",
+					"_key": "k0002h",
+					"text": " (las enzimas que el hígado vierte a la sangre cuando se irrita): entre 1 y 10 de cada 100 en cada caso.",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "bullet",
+			"level": 1
+		},
+		{
+			"_type": "block",
+			"_key": "k0002i",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0002j",
+					"text": "También se vigiló el útero: las biopsias de endometrio (su revestimiento) durante un año no mostraron más riesgo de hiperplasia (un engrosamiento anómalo) ni de cáncer [1].",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0002k",
+			"style": "h2",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0002l",
+					"text": "¿Qué pasa con el hígado y qué análisis hay que hacerse?",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0002m",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0002n",
+					"text": "El fezolinetant puede dañar el hígado, rara vez de forma grave. Como ese daño no siempre da síntomas al principio, se vigila con análisis de sangre [1][3][4].",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0002o",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0002p",
+					"text": "Es lo que más asusta. En los ensayos, unas 3 de cada 1.000 mujeres dejaron el tratamiento porque les subieron las transaminasas [1]. Ya en el mercado se notificaron casos graves, cuya frecuencia aún no puede calcularse [1]. Ninguna agencia da una cifra: en EE. UU., la FDA habla de un daño «raro pero grave» y el 16 de diciembre de 2024 le añadió un recuadro negro, su advertencia más destacada [4].",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0002q",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0002r",
+					"text": "Qué quiere decir:",
+					"marks": [
+						"strong"
+					]
+				},
+				{
+					"_type": "span",
+					"_key": "k0002s",
+					"text": " el daño grave es poco frecuente y, en general, el hígado se recuperó al dejar el fármaco [1][3].",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "bullet",
+			"level": 1
+		},
+		{
+			"_type": "block",
+			"_key": "k0002t",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0002u",
+					"text": "Qué no quiere decir:",
+					"marks": [
+						"strong"
+					]
+				},
+				{
+					"_type": "span",
+					"_key": "k0002v",
+					"text": " que el riesgo sea cero ni que se note a tiempo sin análisis.",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "bullet",
+			"level": 1
+		},
+		{
+			"_type": "block",
+			"_key": "k0002w",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0002x",
+					"text": "Los análisis funcionan como un detector de humo: no evitan el fuego, pero avisan cuando todavía suele poder apagarse. El calendario europeo, que la Agencia Española de Medicamentos y Productos Sanitarios (AEMPS) difundió el 2 de diciembre de 2024, es este [1][3]:",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0002y",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0002z",
+					"text": "Antes de empezar:",
+					"marks": [
+						"strong"
+					]
+				},
+				{
+					"_type": "span",
+					"_key": "k00030",
+					"text": " un análisis. Con transaminasas al doble de lo normal o más, o bilirrubina alta (el pigmento que amarillea la piel cuando el hígado no lo elimina), no se inicia.",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "number",
+			"level": 1
+		},
+		{
+			"_type": "block",
+			"_key": "k00031",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k00032",
+					"text": "Meses 1, 2 y 3:",
+					"marks": [
+						"strong"
+					]
+				},
+				{
+					"_type": "span",
+					"_key": "k00033",
+					"text": " un análisis cada mes.",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "number",
+			"level": 1
+		},
+		{
+			"_type": "block",
+			"_key": "k00034",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k00035",
+					"text": "Después:",
+					"marks": [
+						"strong"
+					]
+				},
+				{
+					"_type": "span",
+					"_key": "k00036",
+					"text": " cuando tu médico lo considere, y siempre que aparezcan los síntomas de «Cuándo consultar».",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "number",
+			"level": 1
+		},
+		{
+			"_type": "block",
+			"_key": "k00037",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k00038",
+					"text": "Si los valores suben",
+					"marks": [
+						"strong"
+					]
+				},
+				{
+					"_type": "span",
+					"_key": "k00039",
+					"text": " demasiado, se suspende y se repiten hasta que se normalicen.",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "number",
+			"level": 1
+		},
+		{
+			"_type": "image",
+			"_key": "k0003a",
+			"asset": {
+				"_ref": "media-img-31-figura-1-jpg",
+				"url": "/_emdash/api/media/file/31-figura-1.jpg"
+			},
+			"alt": "Línea de tiempo con cuatro tubos de análisis: antes de empezar, mes 1, mes 2 y mes 3; después, según criterio médico.",
+			"caption": "Figura 1. El calendario europeo de análisis de hígado con fezolinetant: uno antes de la primera pastilla (a la izquierda de la línea discontinua) y uno al mes los tres primeros meses, cuando se concentra la vigilancia. Después, según tu médico.",
+			"width": 1600,
+			"height": 900
+		},
+		{
+			"_type": "block",
+			"_key": "k0003b",
+			"style": "h2",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0003c",
+					"text": "¿Lo paga la Seguridad Social y cuánto cuesta?",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0003d",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0003e",
+					"text": "Sí, desde el 1 de septiembre de 2026, pero solo con visado y en un supuesto concreto. Según BIFIMED, el buscador de financiación del Ministerio de Sanidad, a 12 de noviembre de 2026 se limita a mujeres con al menos doce meses sin regla y con la terapia hormonal contraindicada por [5]:",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0003f",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0003g",
+					"text": "antecedente de cáncer de mama;",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "bullet",
+			"level": 1
+		},
+		{
+			"_type": "block",
+			"_key": "k0003h",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0003i",
+					"text": "tumores malignos dependientes de estrógenos, o sospecha de ellos;",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "bullet",
+			"level": 1
+		},
+		{
+			"_type": "block",
+			"_key": "k0003j",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0003k",
+					"text": "sangrado vaginal sin explicar;",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "bullet",
+			"level": 1
+		},
+		{
+			"_type": "block",
+			"_key": "k0003l",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0003m",
+					"text": "enfermedad coronaria, angina, infarto, ictus o accidente isquémico transitorio;",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "bullet",
+			"level": 1
+		},
+		{
+			"_type": "block",
+			"_key": "k0003n",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0003o",
+					"text": "trombosis venosa o embolia pulmonar, actual o pasada;",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "bullet",
+			"level": 1
+		},
+		{
+			"_type": "block",
+			"_key": "k0003p",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0003q",
+					"text": "alergia a los estrógenos o a la progesterona;",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "bullet",
+			"level": 1
+		},
+		{
+			"_type": "block",
+			"_key": "k0003r",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0003s",
+					"text": "porfiria.",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "bullet",
+			"level": 1
+		},
+		{
+			"_type": "block",
+			"_key": "k0003t",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0003u",
+					"text": "Estar en la lista decide quién lo paga, no si te conviene. Con antecedente de cáncer de mama se financia [5], pero la ficha técnica no lo recomienda durante el tratamiento del cáncer, incluido el tamoxifeno, y después pide valorar cada caso [1]. Se decide con tu oncóloga, como contamos en ",
+					"marks": []
+				},
+				{
+					"_type": "span",
+					"_key": "k0003w",
+					"text": "menopausia tras un cáncer de mama",
+					"marks": [
+						"k0003v"
+					]
+				},
+				{
+					"_type": "span",
+					"_key": "k0003x",
+					"text": ".",
+					"marks": []
+				}
+			],
+			"markDefs": [
+				{
+					"_type": "link",
+					"_key": "k0003v",
+					"href": "/articulos/menopausia-tras-cancer-de-mama"
+				}
+			]
+		},
+		{
+			"_type": "block",
+			"_key": "k0003y",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0003z",
+					"text": "Si cumples las condiciones, pagas tu aportación habitual sobre los 74,31 euros que cuesta el envase de 28 comprimidos [12]: entre el 40 % y el 60 % si estás en activo (de unos 30 a unos 45 euros) y, en general, el 10 % si eres pensionista (unos 7,40 euros), con topes mensuales para pensionistas y rentas en activo inferiores a 35.000 euros [5][9].",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k00040",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k00041",
+					"text": "El ",
+					"marks": []
+				},
+				{
+					"_type": "span",
+					"_key": "k00043",
+					"text": "visado",
+					"marks": [
+						"k00042"
+					]
+				},
+				{
+					"_type": "span",
+					"_key": "k00044",
+					"text": " es un control previo: tu servicio de salud comprueba que la receta se ajusta a las condiciones financiadas [13]. El trámite y los plazos dependen de cada comunidad autónoma y no los hemos verificado: pregunta en tu centro de salud quién lo solicita y cuánto tarda.",
+					"marks": []
+				}
+			],
+			"markDefs": [
+				{
+					"_type": "link",
+					"_key": "k00042",
+					"href": "/articulos/pedir-terapia-hormonal-sanidad-publica"
+				}
+			]
+		},
+		{
+			"_type": "block",
+			"_key": "k00045",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k00046",
+					"text": "Es una condición estrecha. Si no la cumples, por ejemplo porque podrías usar THM y has decidido no hacerlo, tu decisión es legítima y te lo pueden recetar, pero pagas enteros esos 74,31 euros por envase [12]. Confírmalo en la farmacia antes de empezar: es un gasto fijo.",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k00047",
+			"style": "h2",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k00048",
+					"text": "¿Interacciona con otros fármacos?",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k00049",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0004a",
+					"text": "Sí. Está contraindicado con los medicamentos que frenan de forma moderada o intensa la enzima del hígado que lo elimina (CYP1A2). La ficha técnica pone como ejemplos los anticonceptivos con etinilestradiol (el estrógeno de muchas píldoras), la fluvoxamina (un antidepresivo), la mexiletina (para arritmias) y el enoxacino (un antibiótico) [1]. No es una lista cerrada: lleva a la consulta todo lo que tomas y no dejes nada por tu cuenta.",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0004b",
+			"style": "h2",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0004c",
+					"text": "Qué puedes hacer hoy",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0004d",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0004e",
+					"text": "Haz la lista de lo que tomas",
+					"marks": [
+						"strong"
+					]
+				},
+				{
+					"_type": "span",
+					"_key": "k0004f",
+					"text": ", incluidos anticonceptivos, antidepresivos y suplementos.",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "number",
+			"level": 1
+		},
+		{
+			"_type": "block",
+			"_key": "k0004g",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0004h",
+					"text": "Anota tus sofocos dos semanas:",
+					"marks": [
+						"strong"
+					]
+				},
+				{
+					"_type": "span",
+					"_key": "k0004i",
+					"text": " cuántos al día y cuánto te limitan.",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "number",
+			"level": 1
+		},
+		{
+			"_type": "block",
+			"_key": "k0004j",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0004k",
+					"text": "Lleva tu último análisis",
+					"marks": [
+						"strong"
+					]
+				},
+				{
+					"_type": "span",
+					"_key": "k0004l",
+					"text": " si incluye transaminasas (ALT o GPT, AST o GOT) y bilirrubina.",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "number",
+			"level": 1
+		},
+		{
+			"_type": "block",
+			"_key": "k0004m",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0004n",
+					"text": "Repasa tus antecedentes",
+					"marks": [
+						"strong"
+					]
+				},
+				{
+					"_type": "span",
+					"_key": "k0004o",
+					"text": " con la lista de causas financiadas: es la llave del visado.",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "number",
+			"level": 1
+		},
+		{
+			"_type": "block",
+			"_key": "k0004p",
+			"style": "h2",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0004q",
+					"text": "Cuándo consultar",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0004r",
+			"style": "blockquote",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0004s",
+					"text": "Deja de tomarlo y consulta ese mismo día si, desde que lo tomas, notas…",
+					"marks": [
+						"strong"
+					]
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0004t",
+			"style": "blockquote",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0004u",
+					"text": "• la piel o el blanco de los ojos amarillos, la orina oscura o las heces claras [3][4];",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0004v",
+			"style": "blockquote",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0004w",
+					"text": "• picor, un cansancio que antes no tenías, náuseas o vómitos, pérdida de apetito o dolor de estómago sin otra explicación [3][4].",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0004x",
+			"style": "blockquote",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0004y",
+					"text": "Si no localizas a tu médico ese día, acude a urgencias y di que tomas fezolinetant.",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0004z",
+			"style": "blockquote",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k00050",
+					"text": "Deja de tomarlo y llama a tu médico si…",
+					"marks": [
+						"strong"
+					]
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k00051",
+			"style": "blockquote",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k00052",
+					"text": "• crees que puedes estar embarazada [1].",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k00053",
+			"style": "blockquote",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k00054",
+					"text": "Pide cita pronto si…",
+					"marks": [
+						"strong"
+					]
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k00055",
+			"style": "blockquote",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k00056",
+					"text": "• llevas tres meses de tratamiento y los sofocos no han mejorado;",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k00057",
+			"style": "blockquote",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k00058",
+					"text": "• no te han pedido los análisis de hígado o se te ha pasado alguno [3];",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k00059",
+			"style": "blockquote",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0005a",
+					"text": "• tienes cualquier ",
+					"marks": []
+				},
+				{
+					"_type": "span",
+					"_key": "k0005c",
+					"text": "sangrado después de la menopausia",
+					"marks": [
+						"k0005b"
+					]
+				},
+				{
+					"_type": "span",
+					"_key": "k0005d",
+					"text": ", tomes lo que tomes.",
+					"marks": []
+				}
+			],
+			"markDefs": [
+				{
+					"_type": "link",
+					"_key": "k0005b",
+					"href": "/articulos/sangrado-despues-de-la-menopausia"
+				}
+			]
+		},
+		{
+			"_type": "block",
+			"_key": "k0005e",
+			"style": "h2",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0005f",
+					"text": "Qué preguntar en la consulta",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0005g",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0005h",
+					"text": "¿La terapia hormonal está contraindicada en mi caso o puedo valorarla?",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "bullet",
+			"level": 1
+		},
+		{
+			"_type": "block",
+			"_key": "k0005i",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0005j",
+					"text": "¿Cumplo las condiciones de financiación y quién tramita el visado?",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "bullet",
+			"level": 1
+		},
+		{
+			"_type": "block",
+			"_key": "k0005k",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0005l",
+					"text": "¿Cómo están hoy mis transaminasas y mi bilirrubina, y cuándo me hago los tres análisis mensuales?",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "bullet",
+			"level": 1
+		},
+		{
+			"_type": "block",
+			"_key": "k0005m",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0005n",
+					"text": "¿Es incompatible algo de lo que tomo? ¿Conviene evitar algo más por el hígado, como el alcohol?",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "bullet",
+			"level": 1
+		},
+		{
+			"_type": "block",
+			"_key": "k0005o",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0005p",
+					"text": "¿Cuándo valoramos si me funciona y si lo sigo necesitando?",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "bullet",
+			"level": 1
+		},
+		{
+			"_type": "block",
+			"_key": "k0005q",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0005r",
+					"text": "Si he tenido cáncer de mama: ¿podemos decidirlo junto con mi oncóloga?",
+					"marks": []
+				}
+			],
+			"markDefs": [],
+			"listItem": "bullet",
+			"level": 1
+		},
+		{
+			"_type": "block",
+			"_key": "k0005s",
+			"style": "h2",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0005t",
+					"text": "Preguntas frecuentes",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0005u",
+			"style": "h3",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0005v",
+					"text": "¿Cuánto tarda en hacer efecto?",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0005w",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0005x",
+					"text": "En los ensayos la mejoría ya se medía a las cuatro semanas: un 53 % menos de sofocos moderados y graves, frente a un 32 % con placebo [2]. Si a los tres meses no notas cambio, tiene sentido replantearlo con tu médico.",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0005y",
+			"style": "h3",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0005z",
+					"text": "¿Durante cuánto tiempo se toma?",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k00060",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k00061",
+					"text": "No hay una duración fijada. La ficha técnica pide evaluar periódicamente si sigue compensando, y sus datos de seguridad llegan a un año [1]. Puedes proponer una revisión anual.",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k00062",
+			"style": "h3",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k00063",
+					"text": "¿Puedo tomarlo si estoy en la perimenopausia?",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k00064",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k00065",
+					"text": "En la perimenopausia (también llamada premenopausia o climaterio) no se ha probado: los ensayos se hicieron en mujeres ya posmenopáusicas [1] y la financiación pública exige doce meses sin regla [5]. Si todavía menstrúas, háblalo con tu médico: necesitarías anticoncepción eficaz y preferiblemente no hormonal [1].",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k00066",
+			"style": "h3",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k00067",
+					"text": "¿Es lo mismo que el elinzanetant (Lynkuet)?",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k00068",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k00069",
+					"text": "Son de la misma familia. El elinzanetant está autorizado en la Unión Europea desde el 17 de noviembre de 2025, también para los sofocos causados por el tratamiento hormonal del cáncer de mama [10], pero a 12 de noviembre de 2026 no está comercializado en España [11]. Lo contamos en ",
+					"marks": []
+				},
+				{
+					"_type": "span",
+					"_key": "k0006b",
+					"text": "elinzanetant (Lynkuet)",
+					"marks": [
+						"k0006a"
+					]
+				},
+				{
+					"_type": "span",
+					"_key": "k0006c",
+					"text": ".",
+					"marks": []
+				}
+			],
+			"markDefs": [
+				{
+					"_type": "link",
+					"_key": "k0006a",
+					"href": "/articulos/elinzanetant-lynkuet"
+				}
+			]
+		},
+		{
+			"_type": "block",
+			"_key": "k0006d",
+			"style": "h3",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0006e",
+					"text": "¿Veoza sirve para los bochornos o calores y se vende en Latinoamérica?",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0006f",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0006g",
+					"text": "Sí: bochornos y calores son los nombres de los sofocos en México, Chile, Argentina o Colombia. En EE. UU. el fármaco se llama Veozah [4]. No hemos verificado en qué países latinoamericanos se vende: pregunta en tu farmacia. Si lo tomas fuera de Europa, pide igualmente los análisis de hígado; el calendario puede variar [4].",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0006h",
+			"style": "h2",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0006i",
+					"text": "Lo que aún no sabemos",
+					"marks": []
+				}
+			],
+			"markDefs": []
+		},
+		{
+			"_type": "block",
+			"_key": "k0006j",
+			"style": "normal",
+			"children": [
+				{
+					"_type": "span",
+					"_key": "k0006k",
+					"text": "No sabemos con qué frecuencia exacta se produce el daño grave en el hígado. Faltan datos de seguridad más allá de un año, en mujeres que empiezan después de los 65 y en tratamiento por cáncer de mama [1], y comparaciones directas con otros ",
+					"marks": []
+				},
+				{
+					"_type": "span",
+					"_key": "k0006m",
+					"text": "tratamientos no hormonales",
+					"marks": [
+						"k0006l"
+					]
+				},
+				{
+					"_type": "span",
+					"_key": "k0006n",
+					"text": " [6]. La financiación en España es reciente y puede cambiar.",
+					"marks": []
+				}
+			],
+			"markDefs": [
+				{
+					"_type": "link",
+					"_key": "k0006l",
+					"href": "/articulos/tratamientos-no-hormonales-menopausia"
+				}
+			]
+		}
+	]
+}

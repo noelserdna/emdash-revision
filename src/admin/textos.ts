@@ -1,0 +1,330 @@
+/**
+ * Todos los textos del panel, en español llano.
+ *
+ * Glosario fijo: «versión» (cada guardado), «vuelta» (cada ronda de corrección),
+ * «comentario», «cambio», «corregir», «la IA», «aprobar», «dar por resuelto /
+ * reabrir», «guías de redacción». En la vista de la revisora no aparecen
+ * «diff», «motor», «estado», «ancla», «prompt» ni «token».
+ */
+
+import type { EstadoTrabajo, Esfuerzo, Publicacion } from "../lib/types.js";
+
+const plural = (n: number, uno: string, varios: string): string => (n === 1 ? uno : varios);
+
+/** Importe en dólares con dos decimales a la española. */
+export const formatoCoste = (usd: number): string =>
+	`${usd.toLocaleString("es-ES", { maximumFractionDigits: 2, minimumFractionDigits: 2 })} $`;
+
+export const T = {
+	// ─── General ────────────────────────────────────────────────────────────
+	cargando: "Cargando…",
+	reintentar: "Intentarlo de nuevo",
+	cerrar: "Cerrar",
+	cancelar: "Cancelar",
+	volver: "Volver",
+	guardar: "Guardar",
+	guardando: "Guardando…",
+	guardado: "Guardado.",
+	borrar: "Borrar",
+	editar: "Editar",
+	masAcciones: "Más acciones",
+	volverAlInicio: "Volver al inicio",
+	errorGenerico: "No se ha podido completar. Inténtalo de nuevo en un momento.",
+	errorCarga: "No se ha podido cargar esta página.",
+	sinPermiso: "Esta página es solo para el administrador.",
+	sesionCaducada:
+		"Tu sesión ha caducado. Lo que estabas escribiendo está guardado en este dispositivo: vuelve a entrar y lo recuperarás.",
+	volverAEntrar: "Volver a entrar",
+
+	// ─── Enlaces de salto y regiones ────────────────────────────────────────
+	saltoArticulo: "Ir al artículo",
+	saltoComentarios: "Ir a comentarios",
+	saltoAcciones: "Ir a acciones",
+	regionArticulo: "Artículo",
+	regionComentarios: "Comentarios",
+	regionAcciones: "Acciones",
+
+	// ─── Inicio ─────────────────────────────────────────────────────────────
+	bienvenida:
+		"Aquí tienes los artículos que esperan tu revisión. Ábrelos, léelos con calma y comenta lo que haya que cambiar: lo demás se guarda solo.",
+	bienvenidaOk: "Entendido",
+	teQuedan: (n: number) =>
+		n === 0 ? "No te queda ningún artículo por revisar." : `Te quedan ${n} ${plural(n, "artículo", "artículos")} por revisar.`,
+	aprobadosDe: (a: number, total: number) => `${a} de ${total} aprobados`,
+	seguirCon: (titulo: string) => `Seguir con: ${titulo}`,
+	empezarCon: (titulo: string) => `Empezar con: ${titulo}`,
+	grupoCambios: "Cambios que te esperan",
+	grupoPorRevisar: "Por revisar",
+	grupoEsperando: "Esperando corrección",
+	grupoAprobados: "Aprobados",
+	grupoVacio: "Nada por aquí.",
+	verMas: (n: number) => `Ver más (${n})`,
+	filtroNecesitan: "Necesitan corrección",
+	filtroTodos: "Ver todos",
+	minutos: (n: number) => `${n} min de lectura`,
+	leido: (p: number) => `Leído el ${p} %`,
+	abiertos: (n: number) => `${n} ${plural(n, "comentario abierto", "comentarios abiertos")}`,
+	vuelta: (n: number) => `Vuelta ${n}`,
+	coste: formatoCoste,
+	enlaceGuias: "Guías de redacción",
+	enlaceAjustes: "Ajustes",
+	listaVacia: "No hay artículos que revisar en las colecciones configuradas.",
+
+	// ─── Preguntas ──────────────────────────────────────────────────────────
+	preguntasTitulo: "Preguntas para ti",
+	preguntasIntro: "Puedes responderlas aquí mismo, sin abrir el artículo.",
+	preguntaAfecta: (n: number) => `Afecta a ${n} ${plural(n, "artículo", "artículos")}:`,
+	respCorrecto: "Es correcto",
+	respQuitar: "Quítalo",
+	respCambiar: "Cámbialo por…",
+	respLuego: "Lo miro luego",
+	respCambiarEtiqueta: "Texto que debe ir en su lugar",
+	respCambiarEnviar: "Guardar respuesta",
+	respCambiarVacio: "Escribe el texto que debe ir en su lugar.",
+	respGuardada: "Respuesta guardada. Se ha anotado en los artículos afectados.",
+	respLuegoGuardada: "De acuerdo, la dejamos para luego.",
+	respPendienteLuego: "La dejaste para luego.",
+
+	// ─── Etiquetas de revisión y publicación ───────────────────────────────
+	estadoPorRevisar: "Por revisar",
+	estadoConComentarios: "Con comentarios",
+	estadoCambios: "Cambios por ver",
+	estadoAprobadoPor: (nombre: string) => `Aprobado por ${nombre}`,
+	estadoCambiadoDespues: "Aprobado · cambiado después",
+	estadoEsperando: "Esperando corrección",
+	publicacion: (p: Publicacion): string | null =>
+		p === "publicado"
+			? "Publicado"
+			: p === "publicado_con_cambios"
+				? "Publicado · cambios sin publicar"
+				: p === "programado"
+					? "Programado"
+					: null,
+	trabajoEtiqueta: (e: EstadoTrabajo): string =>
+		({
+			cola: "En cola",
+			en_curso: "Corrigiéndose",
+			hecho: "Corregido",
+			error: "No se pudo corregir",
+			conflicto: "Sin aplicar (el texto cambió)",
+			cancelado: "Cancelado",
+		})[e],
+
+	// ─── Lector ─────────────────────────────────────────────────────────────
+	comentar: "Comentar",
+	comentarUnidad: (tipo: string, n: number | null) => (n === null ? `Comentar ${tipo}` : `Comentar ${tipo} ${n}`),
+	tipoParrafo: "párrafo",
+	tipoTitulo: "título",
+	tipoLista: "elemento de lista",
+	tipoCita: "cita",
+	tipoTabla: "tabla",
+	tipoCelda: (fila: number, col: number) => `celda de la fila ${fila}, columna ${col}`,
+	tipoImagen: "imagen",
+	tipoPie: "pie de la imagen",
+	tipoAlt: "texto alternativo de la imagen",
+	tipoReferencia: "referencia",
+	tipoTituloArticulo: "el título del artículo",
+	tipoExtracto: "el extracto",
+	tipoOtro: "bloque",
+	contador: (n: number, donde: string) => `${n} ${plural(n, "comentario", "comentarios")} en ${donde}`,
+	dondeEste: (tipo: string) => `este ${tipo}`,
+	textoAlternativo: "Texto alternativo:",
+	sinTextoAlternativo: "Sin texto alternativo",
+	pieImagen: "Pie:",
+	extracto: "Extracto",
+	referencias: "Fuentes",
+	tablaNombre: (n: number) => `Tabla ${n}`,
+	abrirEnlace: (texto: string) => `Abrir enlace «${texto}» en otra pestaña`,
+	enlaceNoValido: "Enlace con una dirección no válida",
+	bloqueDesconocido: (tipo: string) => `Bloque de tipo «${tipo}» que no se puede mostrar aquí.`,
+	finArticulo: "Fin del artículo",
+	pildoraComentar: "Comentar la selección",
+	seleccionRecortada: "Tu selección ocupaba varios párrafos: hemos tomado solo el primero.",
+	irPosicion: "Te llevamos a donde lo dejaste.",
+	articuloVacio: "Este artículo no tiene texto.",
+
+	// ─── Comentarios ────────────────────────────────────────────────────────
+	comentariosTitulo: "Comentarios",
+	comentarioGeneral: "Comentario sobre todo el artículo",
+	sinComentarios: "Aún no hay comentarios. Pulsa «Comentar» junto a cualquier párrafo.",
+	verTodos: "Ver todos los comentarios",
+	resueltos: (n: number) => `Resueltos (${n})`,
+	sinColocar: "No encontramos dónde estaban",
+	sinColocarExplica: "El texto ha cambiado y estos comentarios ya no coinciden con ningún párrafo. Su cita es la de entonces.",
+	pregunta: "Pregunta",
+	propone: "Propone:",
+	respuestaDe: "Respuesta:",
+	darPorResuelto: "Dar por resuelto",
+	reabrir: "Reabrir",
+	cambiarloYa: "Cambiarlo ya",
+	estadoComentario: { abierto: "Abierto", aplicado: "Aplicado", descartado: "Resuelto" } as const,
+	comentarioBorrado: "Comentario borrado.",
+	comentarioGuardado: "Comentario guardado.",
+	comentarioResuelto: "Comentario dado por resuelto.",
+	comentarioReabierto: "Comentario reabierto.",
+	cambioAplicado: "Cambio hecho. Puedes deshacerlo desde la lista de cambios.",
+	confirmarBorrar: "¿Borrar este comentario?",
+	borrarSi: "Sí, borrarlo",
+
+	// ─── Formulario ─────────────────────────────────────────────────────────
+	formTitulo: "Nuevo comentario",
+	formSobre: "Sobre:",
+	formQue: "¿Qué hay que cambiar?",
+	formQueVacio: "Escribe qué hay que cambiar.",
+	formPropuesto: "Texto que propongo (opcional)",
+	formPropuestoAyuda: "Si escribes el texto exacto, podrás cambiarlo tú misma con «Cambiarlo ya».",
+	formFragmento: "Fragmento exacto (opcional)",
+	formFragmentoAyuda: "Copia aquí el trozo concreto del párrafo al que te refieres.",
+	formFragmentoNoEncontrado:
+		"No encontramos ese texto en este párrafo, o aparece más de una vez. Copia un trozo un poco más largo.",
+	formFragmentoSeleccion: "Fragmento seleccionado:",
+	formQuitarFragmento: "Comentar el párrafo entero",
+	formGuardar: "Guardar comentario",
+	formBorradorRecuperado: "Hemos recuperado el comentario que estabas escribiendo.",
+	formNoSituado: "No hemos podido situar el comentario en el texto, que quizá ha cambiado. Recarga la página e inténtalo de nuevo.",
+	formCambiarYaSinPropuesto: "Escribe el texto que propones para poder cambiarlo ya.",
+
+	// ─── Barra de acciones ──────────────────────────────────────────────────
+	seguirLeyendo: (p: number) => `Seguir leyendo · ${p} %`,
+	aprobar: "Aprobar",
+	aprobarIgualmente: "Aprobar igualmente",
+	heTerminado: (n: number) => `He terminado: enviar a corregir (${n})`,
+	cambioSiguiente: "Cambio siguiente",
+	dejarloLuego: "Dejarlo para luego",
+	abrirEditor: "Abrir en el editor",
+	siguiente: (titulo: string) => `Siguiente: ${titulo}`,
+	publicarAhora: "Publicar ahora",
+	retirarAprobacion: "Retirar aprobación",
+	enviarOtraVez: (n: number) => `Enviar a corregir otra vez (${n})`,
+	corregirConIA: "Corregir con la IA…",
+	enviarClaudeCode: "Enviar a Claude Code",
+	verComentarios: (n: number) => `Ver comentarios (${n})`,
+	esperandoCorreccion: "Esperando la corrección",
+	aprobacionRetirada: "Aprobación retirada.",
+	enviadoACorregir: "Enviado a corregir.",
+
+	// ─── Trabajo en curso ───────────────────────────────────────────────────
+	franjaApi: "Se está corrigiendo este artículo. Suele tardar unos minutos. Puedes cerrar la página: te avisaremos por correo.",
+	franjaLocal: (admin: string) => `Enviado. ${admin} lo corregirá con tus comentarios y te avisaremos por correo.`,
+	franjaEnCurso: "La IA está corrigiendo este artículo ahora mismo.",
+	franjaConflicto:
+		"Alguien cambió el texto mientras se corregía. No hemos aplicado la corrección para no pisar ese cambio.",
+	franjaError: "No se ha podido corregir. Tu texto y tus comentarios están intactos.",
+	corregirDeNuevo: "Corregir de nuevo sobre el texto actual",
+	aplicarGuardada: "Aplicar la corrección guardada",
+	correccionLista: (n: number) => `La corrección está lista: ${n} ${plural(n, "cambio", "cambios")} para revisar.`,
+	comentarParaSiguiente: "Puedes seguir comentando: lo que añadas irá a la vuelta siguiente.",
+
+	// ─── Segunda revisión ───────────────────────────────────────────────────
+	cambiosTitulo: "Cambios para revisar",
+	cambioN: (i: number, total: number) => `Cambio ${i} de ${total}`,
+	progresoCambios: (i: number, total: number) =>
+		total - i === 0 ? `Has revisado los ${total} cambios.` : `Cambio ${i + 1} de ${total} · te ${plural(total - i, "queda", "quedan")} ${total - i}`,
+	atenuadoNota: (fecha: string) => `El resto no ha cambiado desde tu lectura del ${fecha}.`,
+	releerNota: "Léelo entero: no consta que terminaras de leer la versión anterior.",
+	resumenReemplazo: "Párrafo corregido",
+	resumenTabla: "Tabla corregida",
+	resumenInsertar: "Párrafo nuevo",
+	resumenEliminar: "Párrafo eliminado",
+	resumenTituloCampo: "Título cambiado",
+	resumenExtractoCampo: "Extracto cambiado",
+	srEliminado: "Eliminado: ",
+	srAnadido: "Añadido: ",
+	srFinCambio: "Fin del cambio.",
+	verOriginal: "Ver el original",
+	porComentario: "Responde a:",
+	estaBien: "Está bien",
+	deshacer: "Deshacer",
+	noEsEsto: "No es esto",
+	noEsEstoNota: "¿Qué falla? (obligatorio)",
+	noEsEstoVacio: "Cuenta brevemente qué falla para que se pueda corregir.",
+	noEsEstoEnviar: "Guardar y reabrir",
+	veredictoActual: (v: string) => `Lo has marcado como: ${v}`,
+	veredictoNombre: { pendiente: "Sin revisar", bien: "Está bien", deshecho: "Deshecho", no_es_esto: "No es esto" } as const,
+	cambioConAvisos: "Compruébalo antes de darlo por bueno",
+	confirmarTitulo: "¿Seguro que está bien?",
+	confirmarAntes: "Antes",
+	confirmarDespues: "Después",
+	confirmarSi: "Sí, está bien",
+	noAplicadosTitulo: "Comentarios que no se han aplicado",
+	noAplicadosIntro: "Quien corrigió explica por qué. Si no te convence, insiste y volverá a la siguiente vuelta.",
+	deAcuerdo: "De acuerdo",
+	insistir: "Insistir",
+	insistido: "Comentario reabierto para la siguiente vuelta.",
+	sinMotivo: "Sin explicación.",
+	aprobadoListo: (n: number) =>
+		n === 0 ? "Aprobado. No te queda ninguno." : `Aprobado. Te ${plural(n, "queda", "quedan")} ${n}.`,
+	comentarParrafo: "Comentar este cambio",
+
+	// ─── Diálogos ───────────────────────────────────────────────────────────
+	aprobarTitulo: "Aprobar el artículo",
+	aprobarTexto: "Quedará aprobado a tu nombre, con fecha de hoy. Si el texto cambia después, te lo indicaremos.",
+	aprobarLeido: (p: number) => `Has leído el ${p} % del artículo.`,
+	aprobarPendientes: (n: number) => `Quedan ${n} ${plural(n, "cambio", "cambios")} sin revisar.`,
+	aprobarAbiertos: (n: number) =>
+		`Hay ${n} ${plural(n, "comentario abierto", "comentarios abiertos")}: al aprobar no se enviarán a corregir.`,
+	seguirRevisando: "Seguir revisando",
+	publicarTitulo: "Publicar ahora",
+	publicarTexto: "La versión que estás viendo saldrá en la web.",
+	publicarSinAprobar: "Esta versión no está aprobada.",
+	publicarAprobadoPor: (nombre: string, fecha: string) => `La última aprobación es de ${nombre}, del ${fecha}, y era de otra versión.`,
+	publicarNadie: "Nadie ha aprobado este artículo todavía.",
+	publicarSoloAdmin: "Solo el administrador puede publicar una versión sin aprobar.",
+	publicar: "Publicar",
+	publicarIgualmente: "Publicar igualmente",
+	publicado: "Publicado.",
+	verEnLaWeb: "Ver en la web",
+	iaTitulo: "Corregir con la IA",
+	iaModelo: "Modelo",
+	iaEsfuerzo: "Esfuerzo",
+	iaCompleta: "Reescritura completa (obliga a releer el artículo entero)",
+	iaCoste: (c: string) => `Coste orientativo por artículo: ${c}`,
+	iaLanzar: "Corregir ahora",
+	esfuerzo: (e: Esfuerzo): string => ({ low: "Bajo", medium: "Medio", high: "Alto", xhigh: "Muy alto" })[e],
+
+	// ─── Guías ──────────────────────────────────────────────────────────────
+	guiasTitulo: "Guías de redacción",
+	guiasIntro: "La IA las sigue al corregir. Escríbelas en Markdown.",
+	guiasVacio: "Todavía no hay guías.",
+	guiaNueva: "Nueva guía",
+	guiaNombre: "Nombre",
+	guiaOrden: "Orden",
+	guiaTexto: "Texto (Markdown)",
+	guiaNombreVacio: "Ponle un nombre a la guía.",
+	guiaBorrarConfirmar: (n: string) => `¿Borrar la guía «${n}»?`,
+	guiaBorrada: "Guía borrada.",
+	guiaSinGuardar: "Hay cambios sin guardar.",
+
+	// ─── Ajustes ────────────────────────────────────────────────────────────
+	ajustesTitulo: "Ajustes de revisión",
+	ajIA: "Corrección con la IA",
+	ajModelo: "Modelo por defecto",
+	ajEsfuerzo: "Esfuerzo por defecto",
+	ajTope: "Tope de gasto mensual (USD, 0 = sin tope)",
+	ajGasto: (g: number, tope: number): string =>
+		tope > 0 ? `Gastado este mes: ${formatoCoste(g)} de ${formatoCoste(tope)}` : `Gastado este mes: ${formatoCoste(g)}`,
+	ajClaveSi: "La clave de la API de Anthropic está configurada.",
+	ajClaveNo: "No hay clave de la API. Añade el secreto ANTHROPIC_API_KEY al Worker para corregir desde el panel.",
+	ajFlujo: "Flujo de revisión",
+	ajRol: "Quién puede aprobar",
+	ajRolEditor: "Editoras y administradores",
+	ajRolAdmin: "Solo administradores",
+	ajRequiere: "Exigir aprobación para publicar (solo un administrador podrá publicar sin aprobar)",
+	ajMotor: "Qué pasa al pulsar «He terminado»",
+	ajMotorLocal: "Queda en cola para corregirlo con Claude Code",
+	ajMotorApi: "Se corrige al momento con la API",
+	ajAdminNombre: "Nombre del responsable que se muestra a la revisora",
+	ajAvisarA: "Correo al que avisar cuando la revisora termina",
+	ajTerminos: "Términos sensibles extra (fármacos, etc.), separados por comas",
+	ajTerminosAyuda: "Un cambio que los toque pedirá confirmación.",
+	ajMcp: "Conexión con Claude Code",
+	ajMcpAyuda:
+		"Crea un token personal con el permiso mcp:tools:emdash-revision y añade este servidor MCP en Claude Code. Después lanza /aplicar-revision.",
+	ajCopiar: "Copiar",
+	ajCopiado: "Copiado.",
+	ajPersonales: "Tus preferencias en este dispositivo",
+	ajAtajos: "Activar atajos de teclado en la lectura",
+	ajAtajosAyuda:
+		"Con el foco en el artículo: flechas para moverte, C para comentar, N para ir al cambio siguiente y B para dar por bueno un cambio sin avisos.",
+	ajGuardados: "Ajustes guardados.",
+} as const;

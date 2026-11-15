@@ -1,0 +1,46 @@
+{
+  "name": "emdash-revision",
+  "version": "0.1.0",
+  "description": "Revisión editorial para EmDash CMS: comentarios anclados al texto, corrección con IA (API de Anthropic o Claude Code por MCP), segunda revisión, aprobación y publicación.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "repository": { "type": "git", "url": "https://github.com/noelserdna/emdash-revision.git" },
+  "keywords": ["emdash", "emdash-plugin", "editorial", "review", "comments", "mcp", "claude"],
+  "files": ["dist", "skills", "README.md", "LICENSE"],
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
+    "./plugin": { "types": "./dist/plugin.d.ts", "default": "./dist/plugin.js" },
+    "./admin": { "types": "./dist/admin.d.ts", "default": "./dist/admin.js" },
+    "./lib": { "types": "./dist/lib.d.ts", "default": "./dist/lib.js" }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "validate": "pnpm typecheck && pnpm test && pnpm build",
+    "prepare": "tsdown"
+  },
+  "peerDependencies": {
+    "emdash": "^1.4.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "astro": "^7.0.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.8.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "emdash": "1.4.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "tsdown": "0.23.7",
+    "typescript": "^5.9.0",
+    "vitest": "5.1.0",
+    "astro": "7.4.7"
+  },
+  "packageManager": "pnpm@11.9.0"
+}
