@@ -21,13 +21,13 @@ import { api, mensajeDe, urlArticulo, urlInicio } from "./api.js";
 import { BarraAcciones, type ItemBarra } from "./BarraAcciones.js";
 import { NoAplicados, TarjetaCambio } from "./Cambios.js";
 import { Compositor, type Objetivo } from "./Compositor.js";
-import { Aviso, AvisoError, EtiquetaPublicacion, EtiquetaRevision, fechaLarga, Raiz, useAnchoMinimo, useAnuncio } from "./comun.js";
+import { Aviso, AvisoError, ESCALAS, EtiquetaPublicacion, EtiquetaRevision, fechaLarga, Raiz, TamanoLetra, useAnchoMinimo, useAnuncio, useEscala } from "./comun.js";
 import { DialogoAprobar, DialogoIA, DialogoPublicar } from "./DialogosArticulo.js";
 import { DialogoHistorial } from "./Historial.js";
 import { useHojaFuentes } from "./estilos.js";
 import { HojaInferior } from "./HojaInferior.js";
 import { Icono } from "./iconos.js";
-import { esImagen, esTabla, Lector, type MarcasUnidad, nombreTipo, numerar, type SeleccionLector } from "./Lector.js";
+import { type BandejaLector, claveBandeja, esImagen, esTabla, Lector, type MarcasUnidad, nombreTipo, numerar, type SeleccionLector } from "./Lector.js";
 import {
 	type Accion,
 	accionesBarra,
@@ -120,6 +120,18 @@ function Articulo() {
 	const [filtro, setFiltro] = React.useState<string[] | null>(null);
 	const [compositor, setCompositor] = React.useState<EstadoCompositor | null>(null);
 	const [hoja, setHoja] = React.useState(false);
+	/** Unidad cuyos comentarios se muestran debajo de su párrafo (pantalla ancha). */
+	const [hilo, setHilo] = React.useState<string | null>(null);
+	const [escala, setEscala] = useEscala();
+	// Al abrirse, la bandeja se trae a la vista sin mover el párrafo de su sitio.
+	const claveVisible = compositor ? `c${compositor.clave}` : hilo;
+	React.useEffect(() => {
+		if (!claveVisible) return;
+		const id = window.requestAnimationFrame(() => {
+			document.querySelector("[data-rv-bandeja]")?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+		});
+		return () => window.cancelAnimationFrame(id);
+	}, [claveVisible]);
 	const [marcada, setMarcada] = React.useState<string | null>(null);
 	const [dialogo, setDialogo] = React.useState<DialogoAbierto>(null);
 	/** Botón desde el que se abrió el historial, para devolverle el foco. */
@@ -449,7 +461,9 @@ function Articulo() {
 		contadorComp.current += 1;
 		setMarcada(null);
 		setCompositor({ clave: contadorComp.current, objetivo, origen, ...extra });
-		if (!ancho) setHoja(true);
+		setHilo(null);
+		// En pantalla ancha el formulario se abre debajo del párrafo; en estrecha, en la hoja.
+		setHoja(!ancho);
 	}
 
 	const cerrarCompositor = React.useCallback(() => {
@@ -485,24 +499,33 @@ function Articulo() {
 			const cs = marcas.get(unidad)?.comentarios ?? [];
 			const primero = cs[0];
 			if (!primero) return;
-			if (marcas.get(unidad)?.activa && ancho) {
+			if (ancho && hilo === unidad && !compositor) {
 				setActivo(null);
 				setFiltro(null);
+				setHilo(null);
 				return;
 			}
 			setActivo(primero.id);
 			setFiltro(cs.map((c) => c.id));
 			anunciar(T.contador(cs.length, unidades.get(unidad)?.desc ?? ""));
-			if (!ancho) setHoja(true);
+			if (ancho) {
+				setCompositor(null);
+				setHilo(unidad);
+			} else setHoja(true);
 		},
-		[marcas, ancho, anunciar, unidades],
+		[marcas, ancho, anunciar, unidades, hilo, compositor],
 	);
 
 	const irAComentario = (c: ComentarioVista) => {
 		setActivo(c.id);
 		const u = unidadDe(c);
-		if (!ancho) setHoja(false);
+		setHoja(false);
 		if (!u) return;
+		if (ancho) {
+			setCompositor(null);
+			setFiltro((marcas.get(u)?.comentarios ?? [c]).map((x) => x.id));
+			setHilo(u);
+		}
 		window.requestAnimationFrame(() => desplazarA(papelRef.current?.querySelector(selectorUnidad(u)) ?? null));
 	};
 
@@ -676,7 +699,7 @@ function Articulo() {
 	};
 
 	const itemsMenu: ItemBarra[] = [
-		...(!ancho ? [{ id: "ver_comentarios", texto: T.verComentarios(abiertos) }] : []),
+		{ id: "ver_comentarios", texto: T.verComentarios(abiertos) },
 		...menu.map(item),
 		{ id: "historial", texto: T.historial },
 	];
@@ -685,6 +708,8 @@ function Articulo() {
 		switch (accionId as Accion | "ver_comentarios" | "historial") {
 			case "ver_comentarios":
 				setFiltro(null);
+				setHilo(null);
+				setCompositor(null);
 				setHoja(true);
 				return;
 			case "historial":
@@ -760,15 +785,44 @@ function Articulo() {
 		"--rv-fuente-titulos": familiaFuente(config.lectura.titulos, "var(--rv-fuente-cuerpo)") ?? undefined,
 	} as React.CSSProperties;
 
-	const panel = (nivel: 2 | 3) => (
+	const formulario = compositor ? (
+					<Compositor
+						key={compositor.clave}
+						nivel={3}
+						collection={clave.collection}
+						id={clave.id}
+						doc={doc}
+						draftRevisionId={articulo.draftRevisionId}
+						objetivo={compositor.objetivo}
+						inicial={compositor.inicial}
+						recuperado={compositor.recuperado}
+						aviso={compositor.aviso}
+						onCancelar={cerrarCompositor}
+						onGuardado={(c, r) => {
+							actualizarComentario(c);
+							setVista((v) => (v ? { ...v, revision: r } : v));
+							setActivo(c.id);
+							anunciar(T.comentarioGuardado);
+							cerrarCompositor();
+						}}
+						onAplicado={(v) => {
+							setVista(v);
+							borrarBorrador(clave.collection, clave.id);
+							anunciar(T.cambioAplicado);
+						}}
+					/>
+	) : null;
+
+	const panel = (nivel: 2 | 3, incluirCompositor: boolean, compacto = false) => (
 		<PanelComentarios
 			nivel={nivel}
+			compacto={compacto}
 			comentarios={vista.comentarios}
 			activo={activo}
 			orden={ordenComentarios}
 			descripcion={descripcion}
 			huerfanos={huerfanos}
-			filtro={compositor ? null : filtro}
+			filtro={compositor && incluirCompositor ? null : filtro}
 			onQuitarFiltro={() => setFiltro(null)}
 			onComentarGeneral={(origen) => abrirCompositor({ ref: null, descripcion: "" }, origen)}
 			ocupado={ocupado}
@@ -803,37 +857,38 @@ function Articulo() {
 					anunciar(T.cambioAplicado);
 				}
 			}}
-			compositor={
-				compositor ? (
-					<Compositor
-						key={compositor.clave}
-						nivel={nivel}
-						collection={clave.collection}
-						id={clave.id}
-						doc={doc}
-						draftRevisionId={articulo.draftRevisionId}
-						objetivo={compositor.objetivo}
-						inicial={compositor.inicial}
-						recuperado={compositor.recuperado}
-						aviso={compositor.aviso}
-						onCancelar={cerrarCompositor}
-						onGuardado={(c, r) => {
-							actualizarComentario(c);
-							setVista((v) => (v ? { ...v, revision: r } : v));
-							setActivo(c.id);
-							anunciar(T.comentarioGuardado);
-							cerrarCompositor();
-						}}
-						onAplicado={(v) => {
-							setVista(v);
-							borrarBorrador(clave.collection, clave.id);
-							anunciar(T.cambioAplicado);
-						}}
-					/>
-				) : null
-			}
+			compositor={incluirCompositor ? formulario : null}
 		/>
 	);
+
+	const cerrarHilo = () => {
+		setHilo(null);
+		setFiltro(null);
+		setActivo(null);
+	};
+	const refBandeja = compositor?.objetivo.ref ?? null;
+	const anclaHilo = hilo ? resueltas.get(marcas.get(hilo)?.comentarios[0]?.id ?? "")?.ancla : undefined;
+	const bandeja: BandejaLector | null = !ancho
+		? null
+		: compositor && refBandeja
+			? { clave: claveBandeja(refBandeja), nodo: formulario }
+			: hilo && anclaHilo && !compositor
+				? {
+						clave: claveBandeja(anclaHilo),
+						nodo: (
+							<>
+								<div className="rv-cabecera">
+									<h3 style={{ margin: 0 }}>{T.comentariosDe(unidades.get(hilo)?.desc ?? "")}</h3>
+									<button type="button" className="rv-btn rv-btn--plano rv-btn--peque" onClick={cerrarHilo}>
+										<Icono nombre="cerrar" tam={16} />
+										{T.cerrar}
+									</button>
+								</div>
+								{panel(3, false, true)}
+							</>
+						),
+					}
+				: null;
 
 	const franja = (() => {
 		if (!trabajo) return null;
@@ -893,7 +948,10 @@ function Articulo() {
 
 	const saltar = (e: React.MouseEvent<HTMLAnchorElement>, destino: string) => {
 		e.preventDefault();
-		if (destino === "rv-comentarios" && !ancho) {
+		if (destino === "rv-comentarios") {
+			setFiltro(null);
+			setHilo(null);
+			setCompositor(null);
 			setHoja(true);
 			return;
 		}
@@ -918,7 +976,7 @@ function Articulo() {
 					{T.saltoAcciones}
 				</a>
 			</nav>
-			<div className="rv-articulo" ref={contRef}>
+			<div className="rv-articulo" ref={contRef} style={{ "--rv-escala": String(ESCALAS[escala]) } as React.CSSProperties}>
 				<div className="rv-cabecera" style={{ marginBottom: "1rem" }}>
 					<a href={urlInicio()} className="rv-btn rv-btn--plano">
 						{T.volverAlInicio}
@@ -927,6 +985,20 @@ function Articulo() {
 						<EtiquetaRevision estado={revision.estado} aprobacion={revision.aprobacion} trabajo={trabajo} />
 						<EtiquetaPublicacion publicacion={articulo.publicacion} />
 						{revision.vuelta > 0 ? <span className="rv-etiqueta">{T.vuelta(revision.vuelta)}</span> : null}
+						<button
+							type="button"
+							className="rv-btn rv-btn--peque"
+							onClick={() => {
+								setFiltro(null);
+								setHilo(null);
+								setCompositor(null);
+								setHoja(true);
+							}}
+						>
+							<Icono nombre="comentario" tam={16} />
+							{T.verComentarios(abiertos)}
+						</button>
+						<TamanoLetra escala={escala} onCambio={setEscala} />
 					</div>
 				</div>
 
@@ -991,8 +1063,14 @@ function Articulo() {
 								}}
 							/>
 						) : null}
+						{ancho && compositor && !refBandeja ? (
+							<div className="rv-bandeja rv-bandeja--general" data-rv-bandeja="">
+								{formulario}
+							</div>
+						) : null}
 						<Lector
 							papelRef={papelRef}
+							bandeja={bandeja}
 							doc={doc}
 							portada={articulo.portada}
 							marcas={marcas}
@@ -1018,11 +1096,6 @@ function Articulo() {
 							}
 						/>
 					</section>
-					{ancho ? (
-						<aside id="rv-comentarios" className="rv-panel" aria-label={T.regionComentarios} tabIndex={-1}>
-							{panel(2)}
-						</aside>
-					) : null}
 				</div>
 
 				<BarraAcciones
@@ -1033,7 +1106,7 @@ function Articulo() {
 					onAccion={(a, o) => void onAccion(a, o)}
 				/>
 
-				{!ancho ? (
+				{
 					<HojaInferior
 						abierta={hoja}
 						onCerrar={() => {
@@ -1041,11 +1114,11 @@ function Articulo() {
 							setCompositor(null);
 							setFiltro(null);
 						}}
-						titulo={compositor ? (compositor.objetivo.ref ? T.formTitulo : T.comentarioGeneral) : T.comentariosTitulo}
+						titulo={compositor && !ancho ? (compositor.objetivo.ref ? T.formTitulo : T.comentarioGeneral) : T.comentariosTitulo}
 					>
-						{panel(3)}
+						{panel(3, !ancho)}
 					</HojaInferior>
-				) : null}
+				}
 
 				<DialogoAprobar
 					abierto={dialogo === "aprobar"}

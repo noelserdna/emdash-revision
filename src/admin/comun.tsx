@@ -170,3 +170,58 @@ export function useAnchoMinimo(ref: React.RefObject<HTMLElement | null>, minimo 
 	}, [el, minimo]);
 	return ancho;
 }
+
+// ─── Tamaño de letra ─────────────────────────────────────────────────────────
+
+/** Factores de tamaño del texto de la vista de revisión. */
+export const ESCALAS = [1, 1.15, 1.3, 1.5] as const;
+const CLAVE_ESCALA = "rv-escala";
+
+/** Tamaño de letra elegido por la persona; se recuerda en este navegador. */
+export function useEscala(): [number, (i: number) => void] {
+	const [i, setI] = React.useState(() => {
+		try {
+			const n = Number(window.localStorage.getItem(CLAVE_ESCALA));
+			return Number.isInteger(n) && n >= 0 && n < ESCALAS.length ? n : 0;
+		} catch {
+			return 0;
+		}
+	});
+	const poner = React.useCallback((n: number) => {
+		const v = Math.max(0, Math.min(ESCALAS.length - 1, n));
+		setI(v);
+		try {
+			window.localStorage.setItem(CLAVE_ESCALA, String(v));
+		} catch {
+			/* sin almacenamiento: vale para esta visita */
+		}
+	}, []);
+	return [i, poner];
+}
+
+export function TamanoLetra({ escala, onCambio }: { escala: number; onCambio: (i: number) => void }) {
+	const { anunciar } = useAnuncio();
+	const cambiar = (n: number) => {
+		onCambio(n);
+		anunciar(T.tamanoActual(Math.round((ESCALAS[Math.max(0, Math.min(ESCALAS.length - 1, n))] ?? 1) * 100)));
+	};
+	return (
+		<div className="rv-tamano" role="group" aria-label={T.tamanoLetra}>
+			<button type="button" className="rv-btn rv-btn--peque" disabled={escala <= 0} onClick={() => cambiar(escala - 1)} aria-label={T.tamanoMenos} title={T.tamanoMenos}>
+				<span aria-hidden="true" style={{ fontSize: "0.8125rem" }}>A</span>
+				<span aria-hidden="true">−</span>
+			</button>
+			<button
+				type="button"
+				className="rv-btn rv-btn--peque"
+				disabled={escala >= ESCALAS.length - 1}
+				onClick={() => cambiar(escala + 1)}
+				aria-label={T.tamanoMas}
+				title={T.tamanoMas}
+			>
+				<span aria-hidden="true" style={{ fontSize: "1.125rem" }}>A</span>
+				<span aria-hidden="true">+</span>
+			</button>
+		</div>
+	);
+}

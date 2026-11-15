@@ -91,6 +91,7 @@ export interface PropsTarjeta {
 
 export function TarjetaCambio({ cambio: c, indice, total, comentarios, ocupado, onVeredicto, onComentar }: PropsTarjeta) {
 	const [nota, setNota] = React.useState("");
+	const [propuesto, setPropuesto] = React.useState("");
 	const [pidiendoNota, setPidiendoNota] = React.useState(false);
 	const [errNota, setErrNota] = React.useState(false);
 	const [confirmando, setConfirmando] = React.useState(false);
@@ -197,10 +198,13 @@ export function TarjetaCambio({ cambio: c, indice, total, comentarios, ocupado, 
 								setErrNota(true);
 								return;
 							}
-							void onVeredicto(c, "no_es_esto", nota.trim()).then((ok) => {
+							const mia = propuesto.trim();
+							const completa = mia ? `${nota.trim()}\n\n${T.noEsEstoPropuestoEnNota(mia)}` : nota.trim();
+							void onVeredicto(c, "no_es_esto", completa).then((ok) => {
 								if (ok) {
 									setPidiendoNota(false);
 									setNota("");
+									setPropuesto("");
 								}
 							});
 						}}
@@ -226,6 +230,26 @@ export function TarjetaCambio({ cambio: c, indice, total, comentarios, ocupado, 
 								{T.noEsEstoVacio}
 							</p>
 						) : null}
+						<label htmlFor={`${idNota}-mia`} className="rv-etq" style={{ fontWeight: 600 }}>
+							{T.noEsEstoPropuesto}
+						</label>
+						<textarea
+							id={`${idNota}-mia`}
+							className="rv-input rv-input--redaccion"
+							value={propuesto}
+							aria-describedby={`${idNota}-mia-ayuda`}
+							onChange={(e) => setPropuesto(e.target.value)}
+						/>
+						<div className="rv-acciones">
+							<span className="rv-ayuda" id={`${idNota}-mia-ayuda`}>
+								{T.noEsEstoPropuestoAyuda}
+							</span>
+							{textoDe(c.despues) && !propuesto ? (
+								<button type="button" className="rv-btn rv-btn--plano rv-btn--peque" onClick={() => setPropuesto(textoDe(c.despues))}>
+									{T.noEsEstoPartir}
+								</button>
+							) : null}
+						</div>
 						<div className="rv-acciones">
 							<button type="submit" className="rv-btn rv-btn--principal" disabled={ocupado}>
 								{T.noEsEstoEnviar}

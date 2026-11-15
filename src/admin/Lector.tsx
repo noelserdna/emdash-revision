@@ -87,6 +87,34 @@ const ContextoLector = React.createContext<ContextoLectorValor>({
 
 const PRIMERA_UNIDAD = idUnidad({ campo: "title" });
 
+/**
+ * Bandeja: lo que se abre justo debajo de un bloque (el formulario de comentario
+ * o los comentarios de ese bloque). Va en un contexto aparte para que escribir
+ * en ella no repinte el artículo entero.
+ */
+export interface BandejaLector {
+	/** Clave del bloque de primer nivel, o `campo:title`, `campo:excerpt`, `campo:references`. */
+	clave: string;
+	nodo: React.ReactNode;
+}
+const ContextoBandeja = React.createContext<BandejaLector | null>(null);
+
+/** Dónde se abre la bandeja de una unidad. */
+export function claveBandeja(ref: RefUnidad): string {
+	return ref.campo === "content" && ref.blockKey ? ref.blockKey : `campo:${ref.campo}`;
+}
+
+function Ranura({ clave, enLista }: { clave: string; enLista?: boolean }) {
+	const b = React.useContext(ContextoBandeja);
+	if (!b || b.clave !== clave) return null;
+	const caja = (
+		<div className="rv-bandeja" data-rv-bandeja="">
+			{b.nodo}
+		</div>
+	);
+	return enLista ? <li className="rv-bandeja-li">{caja}</li> : caja;
+}
+
 // ─── Texto con marcas ────────────────────────────────────────────────────────
 
 const MARCAS_SIMPLES: Record<string, "strong" | "em" | "code" | "u" | "s"> = {
@@ -506,10 +534,16 @@ function ItemDeLista({ item, numeros }: { item: ItemLista; numeros: Map<string, 
 						<Eliminados tras={item.node._key} />
 					</li>
 				) : null}
+				<Ranura clave={item.node._key} enLista />
 			</>
 		);
 	}
-	return <BloqueTexto node={item.node} num={num} />;
+	return (
+		<>
+			<BloqueTexto node={item.node} num={num} />
+			<Ranura clave={item.node._key} enLista />
+		</>
+	);
 }
 
 function BloqueTextoConHijos({ item, num, hijos }: { item: ItemLista; num: Numeracion; hijos: React.ReactNode }) {
@@ -570,6 +604,7 @@ export function Contenido({ content }: { content: PTNode[] }) {
 				return (
 					<React.Fragment key={t.node._key}>
 						<Nodo node={t.node} num={num} />
+						<Ranura clave={t.node._key} />
 						<Eliminados tras={t.node._key} />
 					</React.Fragment>
 				);
@@ -690,6 +725,8 @@ export interface PropsLector {
 	/** Atajos opcionales (solo con el foco en el lector). */
 	onTecla?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
 	antes?: React.ReactNode;
+	/** Lo que se abre debajo de un bloque (formulario o comentarios). */
+	bandeja?: BandejaLector | null;
 	papelRef?: React.RefObject<HTMLDivElement | null>;
 	estilo?: React.CSSProperties;
 	className?: string;
@@ -792,6 +829,7 @@ export function Lector(p: PropsLector) {
 
 	return (
 		<ContextoLector.Provider value={valor}>
+		<ContextoBandeja.Provider value={p.bandeja ?? null}>
 			<div
 				ref={papel}
 				className={`rv-paper${p.className ? ` ${p.className}` : ""}`}
@@ -831,6 +869,8 @@ export function Lector(p: PropsLector) {
 							<TextoPlano texto={p.doc.extracto} unidad={idUnidad(refExtracto)} />
 						</Unidad>
 					) : null}
+					<Ranura clave="campo:title" />
+					<Ranura clave="campo:excerpt" />
 					{p.portada ? (
 						<figure className="rv-portada">
 							{hrefSeguro(p.portada.url, false) ? <img src={hrefSeguro(p.portada.url, false) ?? ""} alt={p.portada.alt} /> : null}
@@ -857,6 +897,7 @@ export function Lector(p: PropsLector) {
 									);
 								})}
 							</ol>
+							<Ranura clave="campo:references" />
 						</section>
 					) : null}
 					<p className="rv-fin" data-rv-fin="">
@@ -886,6 +927,7 @@ export function Lector(p: PropsLector) {
 					</button>
 				) : null}
 			</div>
+		</ContextoBandeja.Provider>
 		</ContextoLector.Provider>
 	);
 }

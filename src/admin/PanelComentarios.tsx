@@ -33,6 +33,8 @@ export interface PropsPanel extends AccionesComentario {
 	onComentarGeneral: (origen: HTMLElement) => void;
 	compositor: React.ReactNode;
 	nivel?: 2 | 3;
+	/** Solo la lista (debajo de un párrafo): sin título ni «Comentario general». */
+	compacto?: boolean;
 	ocupado: boolean;
 }
 
@@ -50,6 +52,7 @@ export function PanelComentarios(p: PropsPanel) {
 	// El comentario activo se trae a la vista dentro del panel.
 	React.useEffect(() => {
 		if (!p.activo) return;
+		if (p.compacto) return; // debajo del párrafo ya está a la vista
 		document.getElementById(`rv-c-${p.activo}`)?.scrollIntoView({ block: "nearest" });
 	}, [p.activo]);
 
@@ -64,6 +67,7 @@ export function PanelComentarios(p: PropsPanel) {
 	return (
 		<div className="rv-panel">
 			{p.compositor}
+			{p.compacto ? null : (
 			<div className="rv-cabecera">
 				<H style={{ margin: 0 }}>{T.comentariosTitulo}</H>
 				<button type="button" className="rv-btn rv-btn--peque" onClick={(e) => p.onComentarGeneral(e.currentTarget)}>
@@ -71,7 +75,8 @@ export function PanelComentarios(p: PropsPanel) {
 					{T.comentarioGeneral}
 				</button>
 			</div>
-			{p.filtro ? (
+			)}
+			{p.filtro && !p.compacto ? (
 				<div>
 					<button type="button" className="rv-btn rv-btn--plano rv-btn--peque" onClick={p.onQuitarFiltro}>
 						{T.verTodos}
