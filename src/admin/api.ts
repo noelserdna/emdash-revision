@@ -117,6 +117,8 @@ export const api = {
 	aprobar: (c: Clave & { confirmar?: boolean }) => llamar<RespuestaAprobar>("revision/aprobar", c),
 	retirar: (c: Clave) => llamar<{ revision: RevisionDoc }>("revision/retirar", c),
 	publicar: (c: Clave & { confirmar?: boolean }) => llamar<RespuestaPublicar>("revision/publicar", c),
+	editarCambio: (b: { id: string; texto: string }) =>
+		llamar<{ cambio: CambioVista; revision: RevisionDoc; doc: DocRevisable }>("cambios/editar", b),
 	veredicto: (b: { id: string; veredicto: Veredicto; nota?: string; confirmado?: boolean }) =>
 		llamar<{ cambio: CambioVista; revision: RevisionDoc; doc?: DocRevisable }>("cambios/veredicto", b),
 	versiones: (c: Clave) => llamar<HistorialVista>("versiones/listar", c),

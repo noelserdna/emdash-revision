@@ -5,6 +5,7 @@
  */
 import { resolverAncla } from "./anclas.js";
 import { celdaDe, esBloque, esEditable, esImagen, esTabla, markdownABloques, nuevaClave as claveAleatoria, referenciasDe, textoDeBloque, tipoDeBloque } from "./bloques.js";
+import { diffPalabras } from "./diff.js";
 import { igualesSinClaves } from "./hash.js";
 import { detectarSensibles } from "./sensibles.js";
 import type { Ancla, Aviso, CambioDoc, CampoAncla, DocRevisable, Op, OpRechazada, PTMarkDef, PTNode, PTSpan, ResultadoOps } from "./types.js";
@@ -455,6 +456,40 @@ export function sustituirFragmento(doc: DocRevisable, ancla: Ancla, texto: strin
 		],
 		rechazadas: [],
 	};
+}
+
+// ─── reescribirSpans ─────────────────────────────────────────────────────────
+
+/**
+ * Cambia el texto de un párrafo por `textoNuevo` conservando el formato: solo se
+ * tocan las palabras que cambian, y lo nuevo hereda las negritas, cursivas o
+ * enlaces del tramo que sustituye. Así la revisora edita texto llano y los
+ * enlaces y las negritas de lo que no ha tocado siguen en su sitio.
+ */
+export function reescribirSpans(spans: PTSpan[], textoNuevo: string, clave: () => string): PTSpan[] {
+	const antes = spans.map((s) => s.text).join("");
+	if (antes === textoNuevo) return spans;
+	const tramos: Array<{ inicio: number; fin: number; texto: string }> = [];
+	let pos = 0;
+	let abierto: { inicio: number; fin: number; texto: string } | null = null;
+	for (const seg of diffPalabras(antes, textoNuevo)) {
+		if (seg.tipo === "igual") {
+			if (abierto) tramos.push(abierto);
+			abierto = null;
+			pos += seg.texto.length;
+			continue;
+		}
+		abierto ??= { inicio: pos, fin: pos, texto: "" };
+		if (seg.tipo === "eliminado") {
+			pos += seg.texto.length;
+			abierto.fin = pos;
+		} else abierto.texto += seg.texto;
+	}
+	if (abierto) tramos.push(abierto);
+	let out = spans;
+	// De atrás adelante, para que las posiciones anteriores sigan valiendo.
+	for (const t of tramos.reverse()) out = sustituirEnSpans(out, t.inicio, t.fin, t.texto, clave);
+	return out.filter((s) => s.text !== "");
 }
 
 // ─── deshacerCambio ──────────────────────────────────────────────────────────

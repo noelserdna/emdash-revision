@@ -30,7 +30,7 @@ import {
 	retirarAprendizaje,
 	senalDeEdicion,
 } from "./lib/aprendizaje.js";
-import { darVeredicto } from "./lib/cambios.js";
+import { darVeredicto, editarCambio } from "./lib/cambios.js";
 import {
 	aplicarComentario,
 	borrarComentario,
@@ -307,6 +307,9 @@ export function createPlugin(options: RevisionPluginOptions): ResolvedPlugin {
 		),
 		"cambios/veredicto": memberRoute(schemas.veredicto, async (ctx) =>
 			darVeredicto(entorno(ctx), requireUser(ctx), ctx.input),
+		),
+		"cambios/editar": memberRoute(z.object({ id: idSimple, texto: z.string().min(1).max(20_000) }), async (ctx) =>
+			editarCambio(entorno(ctx), requireUser(ctx), ctx.input),
 		),
 		"trabajo/estado": memberRoute(schemas.ref, async (ctx) => {
 			requireUser(ctx);

@@ -87,11 +87,15 @@ export interface PropsTarjeta {
 	ocupado: boolean;
 	onVeredicto: (c: CambioVista, v: Veredicto, nota?: string, confirmado?: boolean) => Promise<boolean>;
 	onComentar?: (c: CambioVista, origen: HTMLElement) => void;
+	/** La revisora reescribe ella el texto del cambio. */
+	onEditar?: (c: CambioVista, texto: string) => Promise<boolean>;
 }
 
-export function TarjetaCambio({ cambio: c, indice, total, comentarios, ocupado, onVeredicto, onComentar }: PropsTarjeta) {
+export function TarjetaCambio({ cambio: c, indice, total, comentarios, ocupado, onVeredicto, onComentar, onEditar }: PropsTarjeta) {
 	const [nota, setNota] = React.useState("");
-	const [propuesto, setPropuesto] = React.useState("");
+	const [editando, setEditando] = React.useState(false);
+	const [mio, setMio] = React.useState("");
+	const [errMio, setErrMio] = React.useState(false);
 	const [pidiendoNota, setPidiendoNota] = React.useState(false);
 	const [errNota, setErrNota] = React.useState(false);
 	const [confirmando, setConfirmando] = React.useState(false);
@@ -101,6 +105,10 @@ export function TarjetaCambio({ cambio: c, indice, total, comentarios, ocupado, 
 	const conAvisos = c.avisos.length > 0;
 	const motivos = comentarios.filter((x) => c.comentarioIds.includes(x.id));
 	const textual = c.op === "reemplazar" || c.op === "campo";
+
+	const d = c.despues;
+	const editable =
+		!!onEditar && c.op !== "eliminar" && c.veredicto !== "deshecho" && d !== null && (typeof d === "string" || d._type === "block");
 
 	const bien = () => {
 		if (conAvisos) setConfirmando(true);
@@ -188,7 +196,50 @@ export function TarjetaCambio({ cambio: c, indice, total, comentarios, ocupado, 
 					</div>
 				) : null}
 
-				{pidiendoNota ? (
+				{editando ? (
+					<form
+						style={{ display: "grid", gap: "0.5rem" }}
+						noValidate
+						onSubmit={(e) => {
+							e.preventDefault();
+							if (!mio.trim()) {
+								setErrMio(true);
+								return;
+							}
+							void onEditar?.(c, mio).then((ok) => {
+								if (ok) setEditando(false);
+							});
+						}}
+					>
+						<label htmlFor={`${idNota}-mio`} className="rv-etq" style={{ fontWeight: 600 }}>
+							{T.editarCambioEtq}
+						</label>
+						<textarea
+							id={`${idNota}-mio`}
+							className="rv-input rv-input--redaccion"
+							value={mio}
+							autoFocus
+							aria-invalid={errMio ? true : undefined}
+							aria-describedby={`${idNota}-mio-ayuda`}
+							onChange={(e) => {
+								setMio(e.target.value);
+								if (e.target.value.trim()) setErrMio(false);
+							}}
+						/>
+						{errMio ? <p className="rv-error">{T.editarCambioVacio}</p> : null}
+						<p className="rv-ayuda" id={`${idNota}-mio-ayuda`} style={{ margin: 0 }}>
+							{T.editarCambioAyuda}
+						</p>
+						<div className="rv-acciones">
+							<button type="submit" className="rv-btn rv-btn--principal" disabled={ocupado}>
+								{T.editarCambioGuardar}
+							</button>
+							<button type="button" className="rv-btn rv-btn--plano" onClick={() => setEditando(false)}>
+								{T.cancelar}
+							</button>
+						</div>
+					</form>
+				) : pidiendoNota ? (
 					<form
 						style={{ display: "grid", gap: "0.5rem" }}
 						noValidate
@@ -198,13 +249,10 @@ export function TarjetaCambio({ cambio: c, indice, total, comentarios, ocupado, 
 								setErrNota(true);
 								return;
 							}
-							const mia = propuesto.trim();
-							const completa = mia ? `${nota.trim()}\n\n${T.noEsEstoPropuestoEnNota(mia)}` : nota.trim();
-							void onVeredicto(c, "no_es_esto", completa).then((ok) => {
+							void onVeredicto(c, "no_es_esto", nota.trim()).then((ok) => {
 								if (ok) {
 									setPidiendoNota(false);
 									setNota("");
-									setPropuesto("");
 								}
 							});
 						}}
@@ -230,26 +278,6 @@ export function TarjetaCambio({ cambio: c, indice, total, comentarios, ocupado, 
 								{T.noEsEstoVacio}
 							</p>
 						) : null}
-						<label htmlFor={`${idNota}-mia`} className="rv-etq" style={{ fontWeight: 600 }}>
-							{T.noEsEstoPropuesto}
-						</label>
-						<textarea
-							id={`${idNota}-mia`}
-							className="rv-input rv-input--redaccion"
-							value={propuesto}
-							aria-describedby={`${idNota}-mia-ayuda`}
-							onChange={(e) => setPropuesto(e.target.value)}
-						/>
-						<div className="rv-acciones">
-							<span className="rv-ayuda" id={`${idNota}-mia-ayuda`}>
-								{T.noEsEstoPropuestoAyuda}
-							</span>
-							{textoDe(c.despues) && !propuesto ? (
-								<button type="button" className="rv-btn rv-btn--plano rv-btn--peque" onClick={() => setPropuesto(textoDe(c.despues))}>
-									{T.noEsEstoPartir}
-								</button>
-							) : null}
-						</div>
 						<div className="rv-acciones">
 							<button type="submit" className="rv-btn rv-btn--principal" disabled={ocupado}>
 								{T.noEsEstoEnviar}
@@ -281,6 +309,20 @@ export function TarjetaCambio({ cambio: c, indice, total, comentarios, ocupado, 
 							<Icono nombre="deshacer" tam={16} />
 							{T.deshacer}
 						</button>
+						{editable ? (
+							<button
+								type="button"
+								className="rv-btn"
+								disabled={ocupado}
+								onClick={() => {
+									setMio(textoDe(c.despues));
+									setErrMio(false);
+									setEditando(true);
+								}}
+							>
+								{T.editarCambio}
+							</button>
+						) : null}
 						<button
 							type="button"
 							className="rv-btn"

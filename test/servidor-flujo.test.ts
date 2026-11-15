@@ -104,6 +104,18 @@ describe("flujo completo", () => {
 		expect(v.trabajo?.estado).toBe("hecho");
 
 		const cambio = v.cambios[0]!;
+		// La revisora reescribe ella el texto del cambio: queda el suyo y se da por bueno.
+		const suyo = `${textoBloque(v, "b1")} Lo he retocado yo.`;
+		const ed = await llamar<{ cambio: { veredicto: string; avisos: unknown[] }; doc: ArticuloVista["articulo"]["doc"] }>(
+			mundo,
+			EDITORA,
+			"cambios/editar",
+			{ id: cambio.id, texto: suyo },
+		);
+		expect(ed.cambio.veredicto).toBe("bien");
+		expect(ed.cambio.avisos).toEqual([]);
+		v = await llamar<ArticuloVista>(mundo, EDITORA, "articulo/get", ART);
+		expect(textoBloque(v, "b1")).toBe(suyo);
 		const ver = await llamar(mundo, EDITORA, "cambios/veredicto", { id: cambio.id, veredicto: "bien", confirmado: true });
 		expect(ver.cambio.veredicto).toBe("bien");
 		expect(ver.revision.estado).toBe("cambios_por_ver");

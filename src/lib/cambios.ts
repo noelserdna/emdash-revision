@@ -9,10 +9,12 @@ import { nombreDe, type Usuario } from "./acceso.js";
 import { autorDe, registrarSenal, textoDeCambio } from "./aprendizaje.js";
 import { crearAncla } from "./anclas.js";
 import { escribirDoc, leerParaAnclar, type Entorno } from "./contenido.js";
-import { deshacerCambio } from "./ops.js";
+import { esBloque, nuevaClave, textoDeBloque } from "./bloques.js";
+import { igualesSinClaves } from "./hash.js";
+import { deshacerCambio, reescribirSpans } from "./ops.js";
 import { auditar, leerRevision, recalcular } from "./revisiones.js";
 import { allRows, collections, nowIso, nuevoId } from "./store.js";
-import type { CambioDoc, CambioVista, ComentarioDoc, DocRevisable, RevisionDoc, Veredicto } from "./types.js";
+import type { CambioDoc, CambioVista, ComentarioDoc, DocRevisable, PTBlock, RevisionDoc, Veredicto } from "./types.js";
 
 export async function cambiosDeVuelta(
 	env: Entorno,
@@ -169,4 +171,90 @@ export async function darVeredicto(
 	const out: { cambio: CambioVista; revision: RevisionDoc; doc?: DocRevisable } = { cambio: { ...nuevo, id: input.id }, revision };
 	if (doc) out.doc = doc;
 	return out;
+}
+
+/**
+ * La revisora reescribe ella misma el texto de un cambio. Su texto sustituye al
+ * de la IA conservando el formato de lo que no toca, el cambio queda dado por
+ * bueno y la diferencia se guarda como señal para la guía aprendida.
+ */
+export async function editarCambio(
+	env: Entorno,
+	user: Usuario,
+	input: { id: string; texto: string },
+): Promise<{ cambio: CambioVista; revision: RevisionDoc; doc: DocRevisable }> {
+	const { ctx } = env;
+	const { cambios } = collections(ctx);
+	const cambio = await cambios.get(input.id);
+	if (!cambio) throw PluginRouteError.notFound("No se encuentra el cambio.");
+	if (cambio.veredicto === "deshecho" || cambio.op === "eliminar") {
+		throw PluginRouteError.conflict("Este cambio ya no se puede editar. Deja un comentario en el párrafo.");
+	}
+	const texto = input.texto.replace(/\s*\n+\s*/g, " ").trim();
+	if (!texto) throw PluginRouteError.badRequest("Escribe el texto como quieres que quede.");
+	const cambiado = PluginRouteError.conflict("El texto ha cambiado después de esta corrección. Recarga el artículo.");
+
+	const entrada = await leerParaAnclar(env, cambio.collection, cambio.entryId);
+	let nuevoDoc: DocRevisable;
+	let despues: CambioDoc["despues"];
+	const antesTexto = textoDeCambio(cambio.despues);
+	if (cambio.campo === "title" || cambio.campo === "excerpt") {
+		const prop = cambio.campo === "title" ? "titulo" : "extracto";
+		if (entrada.doc[prop] !== cambio.despues) throw cambiado;
+		nuevoDoc = { ...entrada.doc, [prop]: texto };
+		despues = texto;
+	} else {
+		const i = entrada.doc.content.findIndex((n) => n._key === cambio.blockKey);
+		const actual = entrada.doc.content[i];
+		if (i < 0 || !actual || !igualesSinClaves(actual, cambio.despues)) throw cambiado;
+		if (!esBloque(actual)) {
+			throw PluginRouteError.badRequest("Las tablas y las imágenes no se editan aquí. Usa «No es esto» y cuenta qué falla.");
+		}
+		const children = reescribirSpans(actual.children ?? [], texto, nuevaClave);
+		const usadas = new Set(children.flatMap((s) => s.marks ?? []));
+		const bloque: PTBlock = { ...actual, children, markDefs: (actual.markDefs ?? []).filter((d) => usadas.has(d._key)) };
+		if (textoDeBloque(bloque) !== texto) throw PluginRouteError.badRequest("No se ha podido guardar ese texto. Prueba de nuevo.");
+		const content = [...entrada.doc.content];
+		content[i] = bloque;
+		nuevoDoc = { ...entrada.doc, content };
+		despues = bloque;
+	}
+	if (antesTexto === texto) {
+		const revision = await leerRevision(ctx, cambio.collection, cambio.entryId);
+		return { cambio: { ...cambio, id: input.id }, revision, doc: entrada.doc };
+	}
+
+	const guardada = await escribirDoc(env, entrada, nuevoDoc, "Antes de editar un cambio");
+	// La redacción es suya: los avisos de la corrección de la IA ya no aplican.
+	const nuevo: CambioDoc = { ...cambio, despues, avisos: [], veredicto: "bien", nota: "Redacción de la revisora", veredictoPor: user.id };
+	await cambios.put(input.id, nuevo);
+	const revision = await recalcular(ctx, cambio.collection, cambio.entryId, {
+		anularAprobacion: true,
+		extra: (r) => {
+			r.hash = guardada.hash;
+			if (r.aprobacion && r.aprobacion.hash !== guardada.hash) r.aprobacion.cambiadoDespues = true;
+		},
+	});
+	await auditar(ctx, {
+		accion: "veredicto",
+		userId: user.id,
+		collection: cambio.collection,
+		entryId: cambio.entryId,
+		hash: revision.hash,
+		detalle: `${input.id}: editado por la revisora`,
+	});
+	if (cambio.trabajoId) {
+		await registrarSenal(env, autorDe(user), {
+			tipo: "edicion",
+			collection: cambio.collection,
+			entryId: cambio.entryId,
+			titulo: guardada.doc.titulo,
+			campo: cambio.campo,
+			antes: antesTexto,
+			despues: texto,
+			nota: "No le gustó la corrección de la IA y la reescribió ella",
+			ref: input.id,
+		});
+	}
+	return { cambio: { ...nuevo, id: input.id }, revision, doc: guardada.doc };
 }

@@ -577,6 +577,22 @@ function Articulo() {
 				comentarios={[...(vista?.comentarios ?? []), ...(vista?.noAplicados ?? [])]}
 				ocupado={ocupado}
 				onVeredicto={onVeredicto}
+				onEditar={async (cc, texto) => {
+					const res = await ejecutar(() => api.editarCambio({ id: cc.id, texto }));
+					if (!res) return false;
+					setVista((v) =>
+						v
+							? {
+									...v,
+									cambios: v.cambios.map((x) => (x.id === res.cambio.id ? res.cambio : x)),
+									revision: res.revision,
+									articulo: { ...v.articulo, doc: res.doc },
+								}
+							: v,
+					);
+					anunciar(T.cambioEditado);
+					return true;
+				}}
 				onComentar={(cc, origen) => {
 					if (cc.op === "campo") onComentar({ campo: cc.campo }, origen);
 					else if (cc.blockKey) onComentar({ campo: "content", blockKey: cc.blockKey }, origen);
