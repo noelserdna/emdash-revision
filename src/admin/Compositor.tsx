@@ -7,6 +7,7 @@
 import * as React from "react";
 
 import { anclaDeFragmento, crearAncla } from "../lib/anclas.js";
+import { textoDeUnidad } from "../lib/bloques.js";
 import type { Ancla, ArticuloVista, ComentarioVista, DocRevisable, RevisionDoc } from "../lib/types.js";
 import { api, esSesionCaducada } from "./api.js";
 import { AvisoError } from "./comun.js";
@@ -44,7 +45,21 @@ export interface PropsCompositor {
 
 export function Compositor(p: PropsCompositor) {
 	const [texto, setTexto] = React.useState(p.inicial?.texto ?? "");
-	const [propuesto, setPropuesto] = React.useState(p.inicial?.propuesto ?? "");
+	// «Texto que propongo» parte del texto actual (el fragmento elegido o el párrafo
+	// entero, ya con la corrección de la IA si la hubo): solo cuenta si se cambia.
+	const original = React.useMemo(() => {
+		const ref = p.objetivo.ref;
+		if (!ref) return "";
+		if (p.objetivo.cita && p.objetivo.inicio !== undefined) return p.objetivo.cita;
+		try {
+			return textoDeUnidad(p.doc, ref) ?? "";
+		} catch {
+			return "";
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+	const [propuestoBruto, setPropuesto] = React.useState(p.inicial?.propuesto || original);
+	const propuesto = propuestoBruto.trim() === original.trim() ? "" : propuestoBruto;
 	const [fragmento, setFragmento] = React.useState(p.inicial?.fragmento ?? "");
 	const [general, setGeneral] = React.useState(false);
 	const [conSeleccion, setConSeleccion] = React.useState(p.objetivo.inicio !== undefined && p.objetivo.fin !== undefined);
@@ -101,7 +116,9 @@ export function Compositor(p: PropsCompositor) {
 		setError(null);
 		setErrFragmento(null);
 		setErrPropuesto(null);
-		if (!texto.trim()) {
+		// Si solo ha reescrito el texto, no hace falta que además lo explique.
+		const que = texto.trim() || (propuesto.trim() ? T.formQuePorDefecto : "");
+		if (!que) {
 			setErrTexto(T.formQueVacio);
 			refTexto.current?.focus();
 			return;
@@ -122,7 +139,7 @@ export function Compositor(p: PropsCompositor) {
 			const res = await api.crearComentario({
 				collection: p.collection,
 				id: p.id,
-				texto: texto.trim(),
+				texto: que,
 				textoPropuesto: propuesto.trim() || undefined,
 				ancla,
 				fragmento: !conSeleccion && fragmento.trim() ? fragmento.trim() : undefined,
@@ -205,9 +222,8 @@ export function Compositor(p: PropsCompositor) {
 					<textarea
 						id={ids.propuesto}
 						ref={refPropuesto}
-						className="rv-input"
-						style={{ minHeight: "4rem" }}
-						value={propuesto}
+						className="rv-input rv-input--redaccion"
+						value={propuestoBruto}
 						aria-invalid={errPropuesto ? true : undefined}
 						aria-describedby={`${ids.propuesto}-ayuda${errPropuesto ? ` ${ids.propuesto}-err` : ""}`}
 						onChange={(e) => {
