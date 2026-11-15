@@ -45,8 +45,9 @@ export interface PropsCompositor {
 
 export function Compositor(p: PropsCompositor) {
 	const [texto, setTexto] = React.useState(p.inicial?.texto ?? "");
-	// «Texto que propongo» parte del texto actual (el fragmento elegido o el párrafo
-	// entero, ya con la corrección de la IA si la hubo): solo cuenta si se cambia.
+	// «Texto que propongo» empieza vacío. «Insertar el texto» lo rellena con el texto
+	// actual (el fragmento elegido o el párrafo entero, ya con la corrección de la IA
+	// si la hubo) para retocarlo a mano; si se inserta y no se cambia, no cuenta.
 	const original = React.useMemo(() => {
 		const ref = p.objetivo.ref;
 		if (!ref) return "";
@@ -58,7 +59,7 @@ export function Compositor(p: PropsCompositor) {
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
-	const [propuestoBruto, setPropuesto] = React.useState(p.inicial?.propuesto || original);
+	const [propuestoBruto, setPropuesto] = React.useState(p.inicial?.propuesto ?? "");
 	const propuesto = propuestoBruto.trim() === original.trim() ? "" : propuestoBruto;
 	const [fragmento, setFragmento] = React.useState(p.inicial?.fragmento ?? "");
 	const [general, setGeneral] = React.useState(false);
@@ -231,7 +232,23 @@ export function Compositor(p: PropsCompositor) {
 							if (errPropuesto && e.target.value.trim()) setErrPropuesto(null);
 						}}
 					/>
-					<small id={`${ids.propuesto}-ayuda`}>{T.formPropuestoAyuda}</small>
+					<div className="rv-acciones">
+						<small id={`${ids.propuesto}-ayuda`} style={{ flex: "1 1 16rem" }}>
+							{T.formPropuestoAyuda}
+						</small>
+						{original && !propuestoBruto.trim() ? (
+							<button
+								type="button"
+								className="rv-btn rv-btn--peque"
+								onClick={() => {
+									setPropuesto(original);
+									refPropuesto.current?.focus();
+								}}
+							>
+								{p.objetivo.cita && p.objetivo.inicio !== undefined ? T.formInsertarFragmento : T.formInsertarParrafo}
+							</button>
+						) : null}
+					</div>
 					{errPropuesto ? (
 						<p className="rv-error" id={`${ids.propuesto}-err`}>
 							{errPropuesto}
