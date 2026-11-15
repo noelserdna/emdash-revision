@@ -5,7 +5,7 @@
 
 import type { PluginContext } from "emdash";
 
-import { AJUSTES_DEFECTO, COPIAS_MAX, COPIAS_MIN, type Ajustes } from "./types.js";
+import { AJUSTES_DEFECTO, COPIAS_MAX, COPIAS_MIN, type Ajustes, type OrigenClave } from "./types.js";
 
 const CLAVE_AJUSTES = "ajustes";
 
@@ -96,12 +96,47 @@ export async function loadWorkerEnv(): Promise<Record<string, unknown> | null> {
 	}
 }
 
-/** Clave de Anthropic: secreto del Worker y, de reserva, process.env (Node). */
-export async function leerClaveApi(nombre: string): Promise<string | null> {
+/** Nombre del ajuste cifrado (secret) donde se guarda la clave pegada en el panel. */
+export const AJUSTE_CLAVE = "anthropicApiKey";
+
+/** Clave de Anthropic guardada desde el panel (cifrada por EmDash). Null si no hay o no se puede descifrar. */
+export async function claveDelPanel(ctx: PluginContext): Promise<string | null> {
+	try {
+		const v = await ctx.settings.get<string>(AJUSTE_CLAVE);
+		return typeof v === "string" && v.trim() ? v.trim() : null;
+	} catch (error) {
+		ctx.log.warn("[revisión] no se pudo leer la clave guardada en el panel", { error: String(error) });
+		return null;
+	}
+}
+
+/** Clave del servidor: secreto del Worker y, de reserva, process.env (Node). */
+export async function claveDelServidor(nombre: string): Promise<string | null> {
 	const env = await loadWorkerEnv();
 	const delWorker = env?.[nombre];
 	if (typeof delWorker === "string" && delWorker.trim()) return delWorker.trim();
 	const proc = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process;
 	const deNode = proc?.env?.[nombre];
 	return typeof deNode === "string" && deNode.trim() ? deNode.trim() : null;
+}
+
+/** Clave en uso y su origen. Manda la del panel; si no hay, la del servidor. */
+export async function resolverClaveApi(
+	ctx: PluginContext,
+	nombre: string,
+): Promise<{ clave: string | null; origen: OrigenClave }> {
+	const panel = await claveDelPanel(ctx);
+	if (panel) return { clave: panel, origen: "panel" };
+	const servidor = await claveDelServidor(nombre);
+	return servidor ? { clave: servidor, origen: "servidor" } : { clave: null, origen: null };
+}
+
+/** Clave de Anthropic en uso (panel o servidor), o null. */
+export async function leerClaveApi(ctx: PluginContext, nombre: string): Promise<string | null> {
+	return (await resolverClaveApi(ctx, nombre)).clave;
+}
+
+/** Comprobación rápida de formato: las claves de la API de Anthropic empiezan por «sk-ant-». */
+export function formatoClaveValido(clave: string): boolean {
+	return /^sk-ant-[A-Za-z0-9_-]{20,}$/.test(clave.trim());
 }

@@ -132,6 +132,9 @@ export const api = {
 	borrarGuia: (id: string) => llamar<{ ok: true }>("guias/borrar", { id }),
 	ajustes: () => llamar<AjustesVista>("ajustes/get"),
 	guardarAjustes: (a: Partial<Ajustes>) => llamar<AjustesVista>("ajustes/guardar", a),
+	guardarClave: (clave: string) =>
+		llamar<AjustesVista & { comprobacion: "valida" | "sin_comprobar" }>("ajustes/clave", { clave }),
+	borrarClave: () => llamar<AjustesVista>("ajustes/clave-borrar"),
 };
 
 // ─── URLs del panel ──────────────────────────────────────────────────────────

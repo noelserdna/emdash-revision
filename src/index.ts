@@ -82,6 +82,13 @@ export function revisionPlugin(options: RevisionPluginOptions): PluginDescriptor
 			"hooks.content-policy:register",
 		],
 		allowedHosts: ["api.anthropic.com"],
+		settingsSchema: {
+			anthropicApiKey: {
+				type: "secret",
+				label: "Clave de la API de Anthropic",
+				description: "Se guarda cifrada. Mejor cámbiala desde Revisión → Ajustes de revisión, que la comprueba antes de guardarla.",
+			},
+		},
 		adminPages: [
 			{ path: "/", label: etiqueta, icon: "check-circle" },
 			{ path: "/guias", label: "Guías de redacción", icon: "book-open" },

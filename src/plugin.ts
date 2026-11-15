@@ -10,7 +10,8 @@ import { z } from "astro/zod";
 
 import type { RevisionPluginOptions } from "./index.js";
 import { requireUser } from "./lib/acceso.js";
-import { fijarDefectos, gastoDelMes, guardarAjustes, leerAjustes, leerClaveApi } from "./lib/ajustes.js";
+import { AJUSTE_CLAVE, fijarDefectos, gastoDelMes, guardarAjustes, leerAjustes, resolverClaveApi } from "./lib/ajustes.js";
+import { borrarClave, guardarClave } from "./lib/clave.js";
 import { aprobar, guardarLectura, publicar, retirar } from "./lib/aprobacion.js";
 import { darVeredicto } from "./lib/cambios.js";
 import {
@@ -177,6 +178,15 @@ const schemas = {
 
 // ─── Plugin ──────────────────────────────────────────────────────
 
+/** Ajustes cifrados del plugin. La interfaz para editarlos está en Ajustes de revisión. */
+export const SETTINGS_SCHEMA = {
+	[AJUSTE_CLAVE]: {
+		type: "secret",
+		label: "Clave de la API de Anthropic",
+		description: "Se guarda cifrada. Mejor cámbiala desde Revisión → Ajustes de revisión, que la comprueba antes de guardarla.",
+	},
+} as const;
+
 export function createPlugin(options: RevisionPluginOptions): ResolvedPlugin {
 	if (!options?.collections || Object.keys(options.collections).length === 0) {
 		throw new Error("[emdash-revision] falta `collections` (p. ej. revisionPlugin({ collections: { posts: {} } })).");
@@ -199,9 +209,12 @@ export function createPlugin(options: RevisionPluginOptions): ResolvedPlugin {
 	}
 
 	async function ajustesVista(ctx: PluginContext): Promise<AjustesVista> {
+		const { clave, origen } = await resolverClaveApi(ctx, options.claveApi ?? "ANTHROPIC_API_KEY");
 		return {
 			ajustes: await leerAjustes(ctx),
-			apiDisponible: !!(await leerClaveApi(options.claveApi ?? "ANTHROPIC_API_KEY")),
+			apiDisponible: !!clave,
+			claveOrigen: origen,
+			claveFinal: clave ? clave.slice(-4) : null,
 			gastoMes: await gastoDelMes(ctx),
 			mcpUrl: ctx.url("/_emdash/api/mcp"),
 			modelos: MODELOS.map((m) => ({ id: m.id, nombre: m.nombre, costeOrientativo: m.costeOrientativo })),
@@ -305,6 +318,14 @@ export function createPlugin(options: RevisionPluginOptions): ResolvedPlugin {
 		"ajustes/get": adminRoute(schemas.vacio, async (ctx) => ajustesVista(ctx)),
 		"ajustes/guardar": adminRoute(schemas.ajustes, async (ctx) => {
 			await guardarAjustes(ctx, ctx.input);
+			return ajustesVista(ctx);
+		}),
+		"ajustes/clave": adminRoute(z.object({ clave: z.string().min(1).max(500) }), async (ctx) => {
+			const { comprobacion } = await guardarClave(ctx, ctx.input.clave);
+			return { ...(await ajustesVista(ctx)), comprobacion };
+		}),
+		"ajustes/clave-borrar": adminRoute(schemas.vacio, async (ctx) => {
+			await borrarClave(ctx);
 			return ajustesVista(ctx);
 		}),
 		"preguntas/importar": adminRoute(schemas.importar, async (ctx) =>
@@ -427,6 +448,8 @@ export function createPlugin(options: RevisionPluginOptions): ResolvedPlugin {
 
 		admin: {
 			entry: "emdash-revision/admin",
+			// La clave pegada en Ajustes de revisión se guarda en este ajuste «secret»: EmDash la cifra.
+			settingsSchema: SETTINGS_SCHEMA,
 			pages: [
 				{ path: "/", label: options.etiqueta ?? "Revisión", icon: "check-circle" },
 				{ path: "/guias", label: "Guías de redacción", icon: "book-open" },

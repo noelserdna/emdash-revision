@@ -102,9 +102,9 @@ Usa los colores del admin de EmDash y sigue su selector de tema. Los estados nun
 | Dónde corre | En segundo plano, en el cron del plugin: se puede cerrar la página | En tu ordenador, con tus herramientas MCP |
 | Modelo | Claude Opus 5.5, Sonnet 5.5, Haiku 5.5 o Fable 5.2, a elegir | El de tu sesión de Claude Code |
 | Coste | Por uso, con registro y tope mensual | Incluido en la suscripción |
-| Requisito | Secreto `ANTHROPIC_API_KEY` en el Worker | Token personal para el MCP del sitio |
+| Requisito | Clave de Anthropic, pegada en Ajustes o como secreto del Worker | Token personal para el MCP del sitio |
 
-**Por API.**
+**Por API.** Pega la clave en *Ajustes de revisión → Corrección con la IA*. El plugin la comprueba con Anthropic antes de guardarla y EmDash la guarda **cifrada** (ajuste `secret`, con `EMDASH_ENCRYPTION_KEY`). Después nunca se vuelve a mostrar: solo se ve de dónde sale y sus 4 últimos caracteres. Si lo prefieres, también vale como secreto del Worker; la del panel tiene prioridad:
 
 ```sh
 wrangler secret put ANTHROPIC_API_KEY
@@ -176,7 +176,7 @@ emdash({
 
 ```sh
 pnpm install
-pnpm test        # 182 tests: librerías, motor de IA, servidor y panel
+pnpm test        # 188 tests: librerías, motor de IA, servidor y panel
 pnpm typecheck
 pnpm build       # tsdown → dist/
 ```

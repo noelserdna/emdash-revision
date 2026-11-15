@@ -45,7 +45,7 @@ const CSS = String.raw`
   line-height: 1.5;
 }
 .rv-root *, .rv-root *::before, .rv-root *::after{ box-sizing: border-box; }
-.rv-root button, .rv-root input, .rv-root textarea, .rv-root select{ font: inherit; color: inherit; }
+:where(.rv-root) :where(button, input, textarea, select){ font: inherit; color: inherit; }
 .rv-root input, .rv-root textarea, .rv-root select{ font-size: 1rem; }
 .rv-root button{ cursor: pointer; }
 .rv-root a:not(.rv-btn){ color: var(--rv-link); }

@@ -123,9 +123,15 @@ function PaginaAjustes() {
 			>
 				<section className="rv-tarjeta" aria-labelledby={f("t-ia")}>
 					<h2 id={f("t-ia")}>{T.ajIA}</h2>
-					<Aviso tono={vista.apiDisponible ? "ok" : "aviso"}>
-						<p>{vista.apiDisponible ? T.ajClaveSi : T.ajClaveNo}</p>
-					</Aviso>
+					<ClaveApi
+						vista={vista}
+						onCambio={(v) => {
+							setVista(v);
+							setForm((a) => (a ? { ...a } : a));
+						}}
+						anunciar={anunciar}
+						alertar={alertar}
+					/>
 					<p style={{ margin: 0 }}>{T.ajGasto(vista.gastoMes, form.topeMensualUsd)}</p>
 					<div className="rv-rejilla">
 						<div className="rv-campo">
@@ -299,6 +305,166 @@ function PaginaAjustes() {
 				</div>
 			</form>
 			<Preferencias />
+		</div>
+	);
+}
+
+/**
+ * Campo para pegar la clave de Anthropic. Nunca se muestra la clave guardada:
+ * solo de dónde sale y sus últimos 4 caracteres. Va dentro del formulario de
+ * ajustes, así que no es un <form> propio: Enter en el campo guarda la clave.
+ */
+function ClaveApi({
+	vista,
+	onCambio,
+	anunciar,
+	alertar,
+}: {
+	vista: AjustesVista;
+	onCambio: (v: AjustesVista) => void;
+	anunciar: (m: string) => void;
+	alertar: (m: string) => void;
+}) {
+	const id = React.useId();
+	const [valor, setValor] = React.useState("");
+	const [error, setError] = React.useState<string | null>(null);
+	const [ocupado, setOcupado] = React.useState(false);
+	const [confirmarBorrar, setConfirmarBorrar] = React.useState(false);
+	const [editando, setEditando] = React.useState(!vista.apiDisponible);
+	const campo = React.useRef<HTMLInputElement>(null);
+
+	const estado =
+		vista.claveOrigen === "panel" && vista.claveFinal
+			? T.ajClavePanel(vista.claveFinal)
+			: vista.claveOrigen === "servidor" && vista.claveFinal
+				? T.ajClaveServidor(vista.claveFinal)
+				: T.ajClaveNo;
+
+	const guardar = async () => {
+		if (!valor.trim()) {
+			setError(T.ajClaveVacia);
+			campo.current?.focus();
+			return;
+		}
+		setOcupado(true);
+		setError(null);
+		try {
+			const v = await api.guardarClave(valor.trim());
+			setValor("");
+			setEditando(false);
+			onCambio(v);
+			anunciar(v.comprobacion === "valida" ? T.ajClaveGuardada : T.ajClaveGuardadaSinComprobar);
+		} catch (e) {
+			const msg = e instanceof Error ? e.message : T.errorGenerico;
+			setError(msg);
+			alertar(msg);
+			campo.current?.focus();
+		} finally {
+			setOcupado(false);
+		}
+	};
+
+	const borrar = async () => {
+		setOcupado(true);
+		try {
+			const v = await api.borrarClave();
+			setConfirmarBorrar(false);
+			setEditando(!v.apiDisponible);
+			onCambio(v);
+			anunciar(T.ajClaveBorrada);
+		} catch (e) {
+			alertar(e instanceof Error ? e.message : T.errorGenerico);
+		} finally {
+			setOcupado(false);
+		}
+	};
+
+	return (
+		<div className="rv-clave" style={{ display: "grid", gap: "0.75rem" }}>
+			<Aviso tono={vista.apiDisponible ? "ok" : "aviso"}>
+				<p>{estado}</p>
+			</Aviso>
+			{editando ? (
+				<div className="rv-campo">
+					<label htmlFor={`${id}-clave`}>{vista.apiDisponible ? T.ajClaveCampoNueva : T.ajClaveCampo}</label>
+					<input
+						ref={campo}
+						id={`${id}-clave`}
+						type="password"
+						className="rv-input"
+						autoComplete="off"
+						spellCheck={false}
+						placeholder="sk-ant-…"
+						value={valor}
+						aria-invalid={error ? true : undefined}
+						aria-describedby={`${id}-clave-ayuda${error ? ` ${id}-clave-err` : ""}`}
+						onChange={(e) => {
+							setValor(e.target.value);
+							if (error) setError(null);
+						}}
+						onKeyDown={(e) => {
+							if (e.key === "Enter") {
+								e.preventDefault();
+								void guardar();
+							}
+						}}
+					/>
+					<small id={`${id}-clave-ayuda`}>{T.ajClaveAyuda}</small>
+					{error ? (
+						<p className="rv-error" id={`${id}-clave-err`}>
+							{error}
+						</p>
+					) : null}
+					<div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+						<button type="button" className="rv-btn rv-btn--principal" disabled={ocupado} onClick={() => void guardar()}>
+							{ocupado ? T.guardando : T.ajClaveGuardar}
+						</button>
+						{vista.apiDisponible ? (
+							<button
+								type="button"
+								className="rv-btn rv-btn--plano"
+								onClick={() => {
+									setEditando(false);
+									setValor("");
+									setError(null);
+								}}
+							>
+								{T.cancelar}
+							</button>
+						) : null}
+					</div>
+				</div>
+			) : (
+				<div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
+					<button
+						type="button"
+						className="rv-btn"
+						onClick={() => {
+							setEditando(true);
+							setTimeout(() => campo.current?.focus(), 0);
+						}}
+					>
+						{T.ajClaveCambiar}
+					</button>
+					{vista.claveOrigen === "panel" ? (
+						confirmarBorrar ? (
+							<>
+								<span role="alert">{T.ajClaveBorrarConfirmar}</span>
+								<button type="button" className="rv-btn rv-btn--peligro" disabled={ocupado} onClick={() => void borrar()}>
+									{T.ajClaveBorrar}
+								</button>
+								<button type="button" className="rv-btn rv-btn--plano" onClick={() => setConfirmarBorrar(false)}>
+									{T.cancelar}
+								</button>
+							</>
+						) : (
+							<button type="button" className="rv-btn rv-btn--plano rv-btn--peligro" onClick={() => setConfirmarBorrar(true)}>
+								{T.ajClaveBorrar}
+							</button>
+						)
+					) : null}
+				</div>
+			)}
 		</div>
 	);
 }

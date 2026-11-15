@@ -118,7 +118,7 @@ export async function crearTrabajo(
 	}
 	const ajustes = await leerAjustes(ctx);
 	if (opts.motor === "api") {
-		if (!(await leerClaveApi(env.opciones.claveApi ?? "ANTHROPIC_API_KEY"))) {
+		if (!(await leerClaveApi(env.ctx, env.opciones.claveApi ?? "ANTHROPIC_API_KEY"))) {
 			throw PluginRouteError.badRequest("Falta la clave de la API de Anthropic en el servidor.");
 		}
 		if (await topeAlcanzado(ctx, ajustes)) {
@@ -173,7 +173,7 @@ export async function terminar(env: Entorno, user: Usuario, collection: string, 
 	const ajustes = await leerAjustes(ctx);
 	let motor: Motor = ajustes.motorHeTerminado;
 	if (motor === "api") {
-		const clave = await leerClaveApi(env.opciones.claveApi ?? "ANTHROPIC_API_KEY");
+		const clave = await leerClaveApi(env.ctx, env.opciones.claveApi ?? "ANTHROPIC_API_KEY");
 		if (!clave || (await topeAlcanzado(ctx, ajustes))) motor = "local";
 	}
 	const t = await crearTrabajo(env, user, collection, entryId, { motor });
@@ -544,7 +544,7 @@ export async function ejecutarTrabajoApi(env: Entorno, trabajoId: string): Promi
 	};
 	try {
 		const ajustes = await leerAjustes(ctx);
-		const apiKey = await leerClaveApi(env.opciones.claveApi ?? "ANTHROPIC_API_KEY");
+		const apiKey = await leerClaveApi(env.ctx, env.opciones.claveApi ?? "ANTHROPIC_API_KEY");
 		if (!apiKey) return await fallar("Falta la clave de la API de Anthropic en el servidor.");
 		if (await topeAlcanzado(ctx, ajustes)) return await fallar("Se ha alcanzado el tope de gasto de este mes.");
 		const { entrada, hash, draftRevisionId } = await construirEntrada(env, trabajoId, t);

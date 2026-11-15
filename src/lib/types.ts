@@ -516,9 +516,16 @@ export interface ArticuloVista {
 	pendientesTotal: number;
 }
 
+/** De dónde sale la clave de Anthropic: guardada (cifrada) desde el panel, secreto del servidor, o ninguna. */
+export type OrigenClave = "panel" | "servidor" | null;
+
 export interface AjustesVista {
 	ajustes: Ajustes;
 	apiDisponible: boolean;
+	/** Origen de la clave en uso. */
+	claveOrigen: OrigenClave;
+	/** Últimos 4 caracteres de la clave en uso, para reconocerla sin mostrarla. */
+	claveFinal: string | null;
 	gastoMes: number;
 	mcpUrl: string;
 	modelos: Array<{ id: ModeloId; nombre: string; costeOrientativo: string }>;

@@ -353,6 +353,8 @@ export function makeStorage() {
 export interface Mundo {
 	storage: Record<string, MemoryCollection<unknown>>;
 	kv: MemoryKV;
+	/** ctx.settings (los «secret» los cifra EmDash; aquí basta con guardarlos). */
+	settings: MemoryKV;
 	content: FakeContent;
 	correos: Array<{ to: string; subject: string; text: string }>;
 	cron: Array<{ name: string; schedule: string; data?: Record<string, unknown> }>;
@@ -364,6 +366,7 @@ export function makeMundo(opts: { conCorreo?: boolean } = {}): Mundo {
 	return {
 		storage: makeStorage(),
 		kv: new MemoryKV(),
+		settings: new MemoryKV(),
 		content: new FakeContent(),
 		correos: [],
 		cron: [],
@@ -383,7 +386,7 @@ export function makeCtx(mundo: Mundo, user: FakeUser | null = ADMIN, input?: unk
 		plugin: { id: "emdash-revision", version: "test" },
 		storage: mundo.storage,
 		kv: mundo.kv,
-		settings: new MemoryKV(),
+		settings: mundo.settings,
 		log,
 		site: { name: "Test", url: "https://test.local", locale: "es" },
 		url: (p: string) => `https://test.local${p}`,

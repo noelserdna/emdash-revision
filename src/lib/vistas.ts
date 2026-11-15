@@ -45,7 +45,7 @@ export async function configVista(env: Entorno, ajustes: Ajustes): Promise<Confi
 		lectura: { cuerpo: l?.cuerpo ?? null, titulos: l?.titulos ?? null, css: l?.css ?? null },
 		adminNombre: ajustes.adminNombre,
 		motorHeTerminado: ajustes.motorHeTerminado,
-		apiDisponible: !!(await leerClaveApi(env.opciones.claveApi ?? "ANTHROPIC_API_KEY")),
+		apiDisponible: !!(await leerClaveApi(env.ctx, env.opciones.claveApi ?? "ANTHROPIC_API_KEY")),
 		requiereAprobacion: ajustes.requiereAprobacion,
 	};
 }
