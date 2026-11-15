@@ -67,6 +67,17 @@ Las dudas del redactor («¿esta cifra incluye a…?») llegan como **Preguntas 
 - **Publicar sin aprobación:** muestra un aviso con quién aprobó qué versión. Hay una opción para impedirlo del todo.
 - **Auditoría:** queda registrado quién comentó, corrigió, aprobó y publicó cada versión.
 
+### 7. Historial de versiones
+
+Cada cambio en el texto deja guardada una copia de cómo estaba antes: «Cambiarlo ya», la corrección de la IA, deshacer un cambio, restaurar una versión o una edición hecha en el editor de EmDash. Y al publicar, lo que estaba publicado se guarda como **versión publicada anterior**, también cuando se publica desde el editor nativo.
+
+- **Historial de versiones**, en el menú «⋯» del artículo: dos listas, *Cambios guardados* y *Versiones publicadas anteriores*, con el motivo, la fecha, quién lo hizo y cuántos párrafos difieren del texto actual.
+- **Ver diferencias:** lo que tenía la copia, tachado; lo que hay ahora, subrayado, párrafo a párrafo.
+- **Restaurar:** la copia vuelve al borrador y el texto actual se guarda antes como copia, así que también se puede deshacer. En las versiones publicadas, *Restaurar y publicar* pasa por la misma confirmación que «Publicar ahora».
+- **Hasta 5 copias de cada tipo** por artículo (5 de cambios y 5 de publicaciones); al guardar una nueva se borra la más antigua.
+
+![Historial de versiones: copias «Antes de restaurar una versión» y «Antes de deshacer un cambio», con fecha, autor, párrafos distintos y los botones Ver diferencias y Restaurar esta versión](docs/img/09-historial.jpg)
+
 ---
 
 ## En el móvil también
@@ -154,7 +165,7 @@ emdash({
 
 | Rol | Puede |
 |---|---|
-| **Editora** (`plugins:read`) | Leer, comentar, «Cambiarlo ya», responder preguntas, revisar cambios, aprobar (si el rol configurado lo permite), publicar y pulsar «He terminado» |
+| **Editora** (`plugins:read`) | Leer, comentar, «Cambiarlo ya», responder preguntas, revisar cambios, aprobar (si el rol configurado lo permite), publicar, ver y restaurar versiones, y pulsar «He terminado» |
 | **Administrador** (`plugins:manage`) | Todo lo anterior, más guías de redacción, ajustes, corregir con la API eligiendo modelo y las herramientas MCP |
 
 ---
@@ -163,7 +174,7 @@ emdash({
 
 ```sh
 pnpm install
-pnpm test        # 167 tests: librerías, motor de IA, servidor y panel
+pnpm test        # 180 tests: librerías, motor de IA, servidor y panel
 pnpm typecheck
 pnpm build       # tsdown → dist/
 ```

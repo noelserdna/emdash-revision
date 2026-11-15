@@ -174,6 +174,22 @@ Todas las rutas son POST JSON. `M` = `plugins:read` (editora), `A` = `plugins:ma
 | `mcp/articulo` | A | `{trabajoId}` | `{entrada: EntradaCorreccion, instrucciones}` |
 | `mcp/entregar` | A | `{trabajoId, ops, resoluciones}` | `{estado: EstadoTrabajo, cambios: number, rechazadas: OpRechazada[]}` |
 
+### Versiones
+
+| Ruta | Perm. | Entrada | Salida |
+|---|---|---|---|
+| `versiones/listar` | M | `{collection, id}` | `HistorialVista`: `{cambios: VersionVista[], publicaciones: VersionVista[], actual: {hash}, publicada: {hash}\|null}` (sin el `doc` de cada copia) |
+| `versiones/ver` | M | `{id}` | `VersionDetalle`: `{version: VersionVista & {doc}, comparacion: BloqueComparado[]}` (solo lo que difiere del texto actual, alineado por `_key`) |
+| `versiones/restaurar` | M | `{id, publicar?: boolean, confirmar?: boolean}` | `ArticuloVista`, o `{requiereConfirmacion: true, motivo, aprobacion}` (con `publicar` y sin aprobación vigente para el texto restaurado; no se toca nada hasta `confirmar: true`) |
+
+Reglas del historial (colección `versiones`, tipo `VersionDoc`, lógica en `src/lib/versiones.ts` y `src/lib/historial.ts`):
+- **Copia de cambio** (`tipo: "cambio"`): `escribirDoc(env, entrada, nuevo, motivo)` guarda el `entrada.doc` anterior antes de escribir si el hash cambia. `motivo: null` no guarda (normalizar claves). `escribirCampos` (`campoRevisado` al aprobar) no guarda. Motivos: «Antes de «Cambiarlo ya»», «Antes de deshacer un cambio», «Antes de la corrección de la IA (vuelta N)», «Antes de restaurar una versión».
+- **Edición externa** (`content:afterSave`, escritura que no es del plugin y hash distinto del último visto): copia «Antes de una edición en el editor» con la revisión de EmDash anterior a la actual (`ctx.content.listRevisions`; se prefiere la que coincide con el último hash visto). Si no se puede obtener, no guarda nada.
+- **Copia de publicación** (`tipo: "publicacion"`): hook `content:beforePublish` (capacidad `hooks.content-policy:register`, `errorPolicy: "continue"`, 5 s). Si la entrada ya estaba publicada y el borrador que se publica es distinto, guarda las columnas vivas (`ctx.content.get`) con el motivo «Versión publicada hasta el 15 nov». Nunca cancela; los errores solo se registran. Cubre también lo publicado desde el editor nativo.
+- **Rotación:** 5 por artículo y por tipo; al guardar la 6.ª se borra la más antigua de ese tipo. No se guarda una copia con el mismo hash que la más reciente de su tipo.
+- **Restaurar:** copia del texto actual (rotando), escribe el `doc` de la versión en el borrador, re-ancla los comentarios abiertos (huérfanos si ya no encajan), marca la aprobación «cambiado después» si el hash difiere, auditoría `restaurar`. Con `publicar`, después llama a `publicar()` con las mismas reglas de rol y `requiereAprobacion`.
+- **Purga:** `content:afterDelete` permanente y `plugin:uninstall` con `deleteData` borran también las versiones.
+
 Herramientas MCP (`mcp.tools`): `revision_cola`, `revision_reclamar`, `revision_articulo`, `revision_entregar` (`destructive: true`), cada una sobre su ruta `mcp/*`.
 
 Reglas de negocio:

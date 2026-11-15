@@ -23,6 +23,7 @@ import { NoAplicados, TarjetaCambio } from "./Cambios.js";
 import { Compositor, type Objetivo } from "./Compositor.js";
 import { Aviso, AvisoError, EtiquetaPublicacion, EtiquetaRevision, fechaLarga, Raiz, useAnchoMinimo, useAnuncio } from "./comun.js";
 import { DialogoAprobar, DialogoIA, DialogoPublicar } from "./DialogosArticulo.js";
+import { DialogoHistorial } from "./Historial.js";
 import { useHojaFuentes } from "./estilos.js";
 import { HojaInferior } from "./HojaInferior.js";
 import { Icono } from "./iconos.js";
@@ -104,7 +105,7 @@ interface EstadoCompositor {
 	origen: HTMLElement | null;
 }
 
-type DialogoAbierto = null | "aprobar" | "publicar" | "ia";
+type DialogoAbierto = null | "aprobar" | "publicar" | "ia" | "historial";
 
 function Articulo() {
 	const collection = leerParametro("collection");
@@ -121,6 +122,8 @@ function Articulo() {
 	const [hoja, setHoja] = React.useState(false);
 	const [marcada, setMarcada] = React.useState<string | null>(null);
 	const [dialogo, setDialogo] = React.useState<DialogoAbierto>(null);
+	/** Botón desde el que se abrió el historial, para devolverle el foco. */
+	const origenHistorial = React.useRef<HTMLElement | null>(null);
 	const [aprobadoListo, setAprobadoListo] = React.useState(false);
 	const [publicadoUrl, setPublicadoUrl] = React.useState<string | null | undefined>(undefined);
 	const [vistosNA, setVistosNA] = React.useState<string[]>(() => (collection && id ? noAplicadosVistos(collection, id) : []));
@@ -675,13 +678,18 @@ function Articulo() {
 	const itemsMenu: ItemBarra[] = [
 		...(!ancho ? [{ id: "ver_comentarios", texto: T.verComentarios(abiertos) }] : []),
 		...menu.map(item),
+		{ id: "historial", texto: T.historial },
 	];
 
 	const onAccion = async (accionId: string, origen: HTMLElement) => {
-		switch (accionId as Accion | "ver_comentarios") {
+		switch (accionId as Accion | "ver_comentarios" | "historial") {
 			case "ver_comentarios":
 				setFiltro(null);
 				setHoja(true);
+				return;
+			case "historial":
+				origenHistorial.current = origen;
+				setDialogo("historial");
 				return;
 			case "seguir_leyendo": {
 				const sig = doc.content.find((n) => !vistos.current.has(n._key));
@@ -1064,6 +1072,21 @@ function Articulo() {
 						setPublicadoUrl(url);
 						anunciar(T.publicado);
 						void cargar();
+					}}
+				/>
+				<DialogoHistorial
+					abierto={dialogo === "historial"}
+					onCerrar={() => {
+						setDialogo(null);
+						window.requestAnimationFrame(() => origenHistorial.current?.focus());
+					}}
+					vista={vista}
+					onRestaurado={(v, publicado) => {
+						setDialogo(null);
+						setVista(v);
+						if (publicado) setPublicadoUrl(v.articulo.urlPublica);
+						anunciar(publicado ? T.restauradaYPublicada : T.restaurada);
+						window.requestAnimationFrame(() => origenHistorial.current?.focus());
 					}}
 				/>
 				{usuario.esAdmin ? (

@@ -21,6 +21,14 @@ import {
 	editarComentario,
 } from "./lib/comentarios.js";
 import { coleccionConfigurada, leerEntrada, type Entorno } from "./lib/contenido.js";
+import {
+	copiaAntesDePublicar,
+	copiaDeEdicionExterna,
+	esEdicionExterna,
+	listarVersiones,
+	restaurarVersion,
+	verVersion,
+} from "./lib/historial.js";
 import { MODELOS } from "./lib/costes.js";
 import { importarPreguntas, responderPregunta } from "./lib/preguntas.js";
 import { leerRevision, purgarEntrada, sincronizar } from "./lib/revisiones.js";
@@ -157,6 +165,7 @@ const schemas = {
 	}),
 	reclamar: z.object({ trabajoId: idSimple.optional() }),
 	trabajoId: z.object({ trabajoId: idSimple }),
+	restaurar: z.object({ id: idSimple, publicar: z.boolean().optional(), confirmar: z.boolean().optional() }),
 	entregar: z.object({
 		trabajoId: idSimple,
 		ops: z.array(opSchema).max(2000),
@@ -172,7 +181,12 @@ export function createPlugin(options: RevisionPluginOptions): ResolvedPlugin {
 	}
 	/** Escrituras propias del plugin pendientes de reconocer en `content:afterSave`. */
 	const propias = new Set<string>();
-	const entorno = (ctx: PluginContext): Entorno => ({ ctx, opciones: options, propias });
+	const entorno = (ctx: PluginContext): Entorno => ({
+		ctx,
+		opciones: options,
+		propias,
+		usuario: (ctx as Partial<RouteContext<unknown>>).user ?? null,
+	});
 
 	function memberRoute<T>(input: z.ZodType<T>, handler: (ctx: RouteContext<T>) => Promise<unknown>): PluginRoute<T> {
 		return { permission: "plugins:read", input, handler };
@@ -243,6 +257,23 @@ export function createPlugin(options: RevisionPluginOptions): ResolvedPlugin {
 			};
 		}),
 
+		// ── Historial de versiones (plugins:read) ──
+		"versiones/listar": memberRoute(schemas.ref, async (ctx) => {
+			requireUser(ctx);
+			return listarVersiones(entorno(ctx), ctx.input);
+		}),
+		"versiones/ver": memberRoute(schemas.id, async (ctx) => {
+			requireUser(ctx);
+			return verVersion(entorno(ctx), ctx.input.id);
+		}),
+		"versiones/restaurar": memberRoute(schemas.restaurar, async (ctx) => {
+			const user = requireUser(ctx);
+			const env = entorno(ctx);
+			const r = await restaurarVersion(env, user, ctx.input);
+			if ("requiereConfirmacion" in r) return r;
+			return articulo(env, user, r.collection, r.entryId);
+		}),
+
 		// ── Administración (plugins:manage) ──
 		"trabajo/crear": adminRoute(schemas.crearTrabajo, async (ctx) => {
 			const { collection, id, ...opts } = ctx.input;
@@ -297,6 +328,7 @@ export function createPlugin(options: RevisionPluginOptions): ResolvedPlugin {
 			"users:read",
 			"email:send",
 			"network:request",
+			"hooks.content-policy:register",
 		],
 		allowedHosts: ["api.anthropic.com"],
 		storage: STORAGE,
@@ -310,9 +342,22 @@ export function createPlugin(options: RevisionPluginOptions): ResolvedPlugin {
 					const id = typeof event.content.id === "string" ? event.content.id : null;
 					if (!id) return;
 					const env = entorno(ctx);
-					if (!(await collections(ctx).revisiones.exists(`${event.collection}:${id}`))) return;
+					const rev = await collections(ctx).revisiones.get(`${event.collection}:${id}`);
+					if (!rev) return;
 					const e = await leerEntrada(env, event.collection, id);
+					// Edición en el editor nativo: copia del estado anterior antes de sincronizar.
+					if (esEdicionExterna(env, event.collection, e.id, rev.hash, e.hash)) {
+						await copiaDeEdicionExterna(env, e, rev.hash, event.actor?.id ?? null);
+					}
 					await sincronizar(env, event.collection, e.id, e.doc, e.hash);
+				},
+			},
+			"content:beforePublish": {
+				// Debe ser rápido (5 s) y no cancelar nunca: solo guarda la copia de lo publicado.
+				timeout: 5_000,
+				errorPolicy: "continue",
+				handler: async (event, ctx) => {
+					await copiaAntesDePublicar(entorno(ctx), event);
 				},
 			},
 			"content:afterDelete": {

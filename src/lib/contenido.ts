@@ -14,15 +14,19 @@ import { PluginRouteError } from "emdash";
 import type { PluginContentItem, PluginContext } from "emdash";
 
 import type { OpcionesColeccion, RevisionPluginOptions } from "../index.js";
+import { nombreDe, type Usuario } from "./acceso.js";
 import { normalizarClaves } from "./bloques.js";
 import { hashDoc } from "./hash.js";
 import type { DocRevisable, PTNode, Publicacion } from "./types.js";
+import { guardarVersion } from "./versiones.js";
 
 export interface Entorno {
 	ctx: PluginContext;
 	opciones: RevisionPluginOptions;
 	/** Escrituras propias pendientes de confirmar: `collection:id:hash`. */
 	propias: Set<string>;
+	/** Quien hace la petición (rutas); null en hooks y cron. Se anota en las copias. */
+	usuario?: Usuario | null;
 }
 
 export interface CamposColeccion {
@@ -144,7 +148,8 @@ export async function leerParaAnclar(env: Entorno, collection: string, id: strin
 	const entrada = await leerEntrada(env, collection, id);
 	const { content, cambiado } = normalizarClaves(entrada.doc.content);
 	if (!cambiado) return entrada;
-	return escribirDoc(env, entrada, { ...entrada.doc, content });
+	// Solo cambian las claves (mismo hash): no se guarda copia.
+	return escribirDoc(env, entrada, { ...entrada.doc, content }, null);
 }
 
 /** Igual que leerEntrada pero sin guardar: claves normalizadas solo en memoria. */
@@ -177,11 +182,27 @@ export async function escribirCampos(
 	await content.update(collection, id, data);
 }
 
-/** Guarda los campos que cambian entre `entrada.doc` y `nuevo`, y devuelve la entrada releída. */
-export async function escribirDoc(env: Entorno, entrada: Entrada, nuevo: DocRevisable): Promise<Entrada> {
+/**
+ * Guarda los campos que cambian entre `entrada.doc` y `nuevo`, y devuelve la
+ * entrada releída. Con `motivo`, antes de escribir guarda una copia del texto
+ * anterior en el historial (si el texto cambia: mismo hash, sin copia).
+ */
+export async function escribirDoc(env: Entorno, entrada: Entrada, nuevo: DocRevisable, motivo: string | null): Promise<Entrada> {
 	const data = camposCambiados(entrada.doc, nuevo, entrada.campos);
 	if (Object.keys(data).length === 0) return entrada;
 	const hash = await hashDoc(nuevo);
+	if (motivo && hash !== entrada.hash) {
+		await guardarVersion(env.ctx, {
+			collection: entrada.collection,
+			entryId: entrada.id,
+			tipo: "cambio",
+			motivo,
+			doc: entrada.doc,
+			hash: entrada.hash,
+			userId: env.usuario?.id ?? null,
+			nombre: env.usuario ? nombreDe(env.usuario) : null,
+		});
+	}
 	await escribirCampos(env, entrada.collection, entrada.id, data, hash);
 	const releida = await leerEntrada(env, entrada.collection, entrada.id);
 	// Si el host devuelve otra cosa (normalización propia), la que vale es la releída.

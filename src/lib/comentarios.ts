@@ -172,7 +172,7 @@ export async function aplicarComentario(env: Entorno, user: Usuario, id: string)
 	if (!res || res.cambios.length === 0) {
 		throw PluginRouteError.conflict("No encuentro el texto que quieres cambiar. Puede que haya cambiado: revisa el comentario.");
 	}
-	const guardada = await escribirDoc(env, entrada, res.doc);
+	const guardada = await escribirDoc(env, entrada, res.doc, "Antes de «Cambiarlo ya»");
 	const rev = await leerRevision(ctx, c.collection, c.entryId);
 	const { cambios, comentarios } = collections(ctx);
 	const creado = nowIso();

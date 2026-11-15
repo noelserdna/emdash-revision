@@ -215,12 +215,16 @@ interface FilaContenido {
 	liveRevisionId: string | null;
 	version: number;
 	updatedAt: string;
+	/** Revisiones de EmDash, de la más antigua a la más reciente. */
+	revisiones: Array<{ id: string; data: Record<string, unknown>; createdAt: string }>;
 }
 
 /** Contenido en memoria con borrador («draft-aware») y publicación con `_rev`. */
 export class FakeContent {
 	readonly filas = new Map<string, FilaContenido>();
 	readonly updates: Array<{ collection: string; id: string; data: Record<string, unknown> }> = [];
+	/** Como el host: hooks `content:beforePublish` antes de publicar (lo engancha makePlugin). */
+	antesDePublicar: ((collection: string, id: string) => Promise<unknown>) | null = null;
 	private rev = 0;
 
 	private k(collection: string, id: string) {
@@ -228,6 +232,7 @@ export class FakeContent {
 	}
 
 	add(collection: string, id: string, data: Record<string, unknown>, opts: { slug?: string; status?: string } = {}): void {
+		const revId = `rev-${++this.rev}`;
 		this.filas.set(this.k(collection, id), {
 			id,
 			slug: opts.slug ?? id,
@@ -235,10 +240,16 @@ export class FakeContent {
 			live: structuredClone(data),
 			draft: null,
 			draftRevisionId: null,
-			liveRevisionId: opts.status === "published" ? `rev-${++this.rev}` : null,
+			liveRevisionId: opts.status === "published" ? revId : null,
 			version: 1,
 			updatedAt: "2026-11-01T00:00:00.000Z",
+			revisiones: [{ id: revId, data: structuredClone(data), createdAt: "2026-11-01T00:00:00.000Z" }],
 		});
+	}
+
+	/** Datos publicados (columnas vivas) y borrador, para los tests. */
+	fila(collection: string, id: string): FilaContenido | undefined {
+		return this.filas.get(this.k(collection, id));
 	}
 
 	private item(collection: string, f: FilaContenido, merged: boolean): PluginContentItem {
@@ -269,6 +280,7 @@ export class FakeContent {
 		const base = f.draft ?? f.live;
 		f.draft = { ...structuredClone(base), ...structuredClone(data) };
 		f.draftRevisionId = `rev-${++this.rev}`;
+		f.revisiones.push({ id: f.draftRevisionId, data: structuredClone(f.draft), createdAt: new Date().toISOString() });
 		f.version++;
 		f.updatedAt = new Date().toISOString();
 	}
@@ -288,6 +300,18 @@ export class FakeContent {
 				const hasMore = off + lim < all.length;
 				return { items, cursor: hasMore ? String(off + lim) : undefined, hasMore };
 			},
+			async listRevisions(collection: string, id: string, opts: { limit?: number } = {}) {
+				const f = self.filas.get(self.k(collection, id));
+				if (!f) return [];
+				return [...f.revisiones]
+					.reverse()
+					.slice(0, opts.limit ?? 50)
+					.map((r) => ({ id: r.id, collection, entryId: id, data: structuredClone(r.data), createdAt: r.createdAt }));
+			},
+			async getRevision(collection: string, id: string, revisionId: string) {
+				const r = self.filas.get(self.k(collection, id))?.revisiones.find((x) => x.id === revisionId);
+				return r ? { id: r.id, collection, entryId: id, data: structuredClone(r.data), createdAt: r.createdAt } : null;
+			},
 			async getPublicUrl(collection: string, id: string) {
 				const f = self.filas.get(self.k(collection, id));
 				return f?.status === "published" ? `https://test.local/${collection}/${f.slug}` : null;
@@ -302,6 +326,7 @@ export class FakeContent {
 				return self.item(collection, self.filas.get(self.k(collection, id))!, true);
 			},
 			async publish(collection: string, id: string, opts: { _rev: string }) {
+				if (self.antesDePublicar) await self.antesDePublicar(collection, id);
 				const f = self.filas.get(self.k(collection, id));
 				if (!f) throw new Error("Content not found");
 				if (opts._rev !== `${f.id}:${f.version}`) throw new Error("REV_CONFLICT");
@@ -408,14 +433,29 @@ export function makePlugin(opciones: RevisionPluginOptions = OPCIONES) {
 		const route = plugin.routes[ruta];
 		if (!route) throw new Error(`Ruta desconocida: ${ruta}`);
 		const parsed = route.input ? route.input.parse(input) : input;
+		mundo.content.antesDePublicar ??= (c, id) => eventoPublicar(mundo, c, id);
 		return (await route.handler(makeCtx(mundo, user, parsed))) as T;
 	}
-	async function hook(nombre: "content:afterSave" | "content:afterDelete" | "cron", mundo: Mundo, event: unknown): Promise<void> {
+	async function hook(
+		nombre: "content:afterSave" | "content:afterDelete" | "content:beforePublish" | "cron",
+		mundo: Mundo,
+		event: unknown,
+	): Promise<unknown> {
 		const h = plugin.hooks[nombre] as { handler: (e: unknown, c: PluginContext) => Promise<unknown> } | undefined;
 		if (!h) throw new Error(`Hook desconocido: ${nombre}`);
-		await h.handler(event, asPluginCtx(makeCtx(mundo, null)));
+		return h.handler(event, asPluginCtx(makeCtx(mundo, null)));
 	}
-	return { plugin, llamar, hook };
+	/** Publica como el host: primero `content:beforePublish` (con el borrador hidratado) y luego la ruta. */
+	async function eventoPublicar(mundo: Mundo, collection: string, id: string, actor?: { id: string }) {
+		const v = await mundo.content.access().getVersioned(collection, id);
+		return hook("content:beforePublish", mundo, {
+			content: { ...v!.item },
+			collection,
+			origin: actor ? { source: "api" } : { source: "plugin", pluginId: "emdash-revision" },
+			actor,
+		});
+	}
+	return { plugin, llamar, hook, eventoPublicar };
 }
 
 // ─── Documento de ejemplo ──────────────────────────────────────────

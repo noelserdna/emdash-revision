@@ -15,6 +15,7 @@ import type {
 	DocRevisable,
 	Esfuerzo,
 	GuiaDoc,
+	HistorialVista,
 	InicioVista,
 	ModeloId,
 	Motor,
@@ -22,6 +23,7 @@ import type {
 	RevisionDoc,
 	TrabajoVista,
 	Veredicto,
+	VersionDetalle,
 } from "../lib/types.js";
 import { T } from "./textos.js";
 
@@ -80,6 +82,10 @@ export type RespuestaPublicar =
 	| { ok: true; urlPublica: string | null; requiereConfirmacion?: undefined }
 	| { requiereConfirmacion: true; motivo: string; aprobacion: Aprobacion | null };
 
+export type RespuestaRestaurar =
+	| (ArticuloVista & { requiereConfirmacion?: undefined })
+	| { requiereConfirmacion: true; motivo: string; aprobacion: Aprobacion | null };
+
 export interface Clave {
 	collection: string;
 	id: string;
@@ -111,6 +117,10 @@ export const api = {
 	publicar: (c: Clave & { confirmar?: boolean }) => llamar<RespuestaPublicar>("revision/publicar", c),
 	veredicto: (b: { id: string; veredicto: Veredicto; nota?: string; confirmado?: boolean }) =>
 		llamar<{ cambio: CambioVista; revision: RevisionDoc; doc?: DocRevisable }>("cambios/veredicto", b),
+	versiones: (c: Clave) => llamar<HistorialVista>("versiones/listar", c),
+	verVersion: (id: string) => llamar<VersionDetalle>("versiones/ver", { id }),
+	restaurarVersion: (b: { id: string; publicar?: boolean; confirmar?: boolean }) =>
+		llamar<RespuestaRestaurar>("versiones/restaurar", b),
 	estadoTrabajo: (c: Clave) => llamar<{ trabajo: TrabajoVista | null; revision: RevisionDoc }>("trabajo/estado", c),
 	crearTrabajo: (b: Clave & { motor: Motor; modelo?: ModeloId; esfuerzo?: Esfuerzo; completa?: boolean }) =>
 		llamar<{ trabajo: TrabajoVista }>("trabajo/crear", b),

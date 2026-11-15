@@ -9,7 +9,7 @@ import * as React from "react";
 
 import { textoDeBloque } from "../lib/bloques.js";
 import { diffPalabras } from "../lib/diff.js";
-import type { CambioVista, ComentarioVista, PTNode, Veredicto } from "../lib/types.js";
+import type { CambioVista, ComentarioVista, PTNode, SegmentoDiff, Veredicto } from "../lib/types.js";
 import { Aviso } from "./comun.js";
 import { Dialogo } from "./Dialogo.js";
 import { Icono } from "./iconos.js";
@@ -38,6 +38,11 @@ export function Marcado({ antes, despues }: { antes: string; despues: string }) 
 			];
 		}
 	}, [antes, despues]);
+	return <Segmentos segmentos={segmentos} />;
+}
+
+/** Segmentos ya calculados: `<del>`/`<ins>` con «Eliminado:»/«Añadido:» para el lector de pantalla. */
+export function Segmentos({ segmentos }: { segmentos: readonly SegmentoDiff[] }) {
 	return (
 		<>
 			{segmentos.map((s, i) =>

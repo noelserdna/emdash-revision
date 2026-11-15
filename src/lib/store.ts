@@ -16,6 +16,7 @@ import type {
 	ReglaDoc,
 	RevisionDoc,
 	TrabajoDoc,
+	VersionDoc,
 } from "./types.js";
 
 /** Opciones de `StorageCollection.query` (emdash no exporta QueryOptions). */
@@ -27,7 +28,7 @@ export interface CollectionConfig {
 }
 
 export const STORAGE: Record<
-	"revisiones" | "lecturas" | "comentarios" | "reglas" | "trabajos" | "cambios" | "guias" | "auditoria",
+	"revisiones" | "lecturas" | "comentarios" | "reglas" | "trabajos" | "cambios" | "guias" | "auditoria" | "versiones",
 	CollectionConfig
 > = {
 	revisiones: { indexes: ["collection", "estado", "actualizado"] },
@@ -40,6 +41,7 @@ export const STORAGE: Record<
 	cambios: { indexes: ["entryId", "vuelta", "orden", ["entryId", "vuelta"]] },
 	guias: { indexes: ["orden"] },
 	auditoria: { indexes: ["entryId", "fecha", ["entryId", "fecha"]] },
+	versiones: { indexes: ["entryId", "tipo", "fecha", ["entryId", "tipo", "fecha"]] },
 };
 
 /** Índices planos para el descriptor (el manifest no admite compuestos). */
@@ -59,6 +61,7 @@ export type Collections = {
 	cambios: StorageCollection<CambioDoc>;
 	guias: StorageCollection<GuiaDoc>;
 	auditoria: StorageCollection<AuditoriaDoc>;
+	versiones: StorageCollection<VersionDoc>;
 };
 
 /** Storage tipado a partir del contexto del plugin. */

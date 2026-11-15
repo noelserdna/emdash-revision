@@ -258,7 +258,22 @@ td > .rv-margen, th > .rv-margen, .rv-figura__textos .rv-margen{ position: stati
 .rv-dialogo__cuerpo{ padding: 1.25rem; display: grid; gap: 1rem; }
 .rv-dialogo h2{ margin: 0; font-size: 1.1875rem; }
 .rv-dialogo p{ margin: 0; }
-.rv-dialogo--ancho{ width: min(48rem, calc(100vw - 2rem)); }
+.rv-dialogo--ancho{ width: min(48rem, calc(100vw - 2rem)); overflow: auto; }
+.rv-historial{ display: grid; gap: 1.25rem; }
+.rv-historial__cab{ display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-start; justify-content: space-between; }
+.rv-historial__cab p{ flex: 1 1 16rem; }
+.rv-historial__seccion{ display: grid; gap: 0.5rem; }
+.rv-historial__seccion h3{ margin: 0; font-size: 1.0625rem; }
+.rv-historial__lista, .rv-version__bloques{ list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
+.rv-version{ border: 1px solid var(--rv-line); border-radius: var(--rv-radio); padding: 0.875rem 1rem; display: grid; gap: 0.375rem; background: var(--rv-bg); min-width: 0; }
+.rv-version__meta{ color: var(--rv-muted); font-size: 0.9375rem; }
+.rv-version__dif{ border-top: 1px solid var(--rv-hairline); margin-top: 0.5rem; padding-top: 0.75rem; display: grid; gap: 0.75rem; }
+.rv-version__bloques li{ display: grid; gap: 0.25rem; padding: 0.625rem 0.75rem; border-radius: 0.5rem; background: var(--rv-surface); }
+.rv-version__etiqueta{ font-size: 0.8125rem; font-weight: 600; color: var(--rv-muted); }
+.rv-version__texto{ white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.55; }
+.rv-version__texto del{ background: var(--rv-del-bg); color: var(--rv-del-text); text-decoration: line-through; text-decoration-thickness: 0.1em; }
+.rv-version__texto ins{ background: var(--rv-ins-bg); color: var(--rv-ins-text); text-decoration: underline; text-decoration-thickness: 0.12em; text-underline-offset: 0.18em; }
+.rv-version .rv-acciones .rv-btn{ flex: 1 1 auto; }
 .rv-hoja{ position: fixed; inset: auto 0 0 0; margin: 0; max-width: 100vw; width: 100vw; border: 0; border-radius: 1rem 1rem 0 0; padding: 0; background: var(--rv-bg); color: var(--rv-text); max-height: 60vh; height: 60vh; transition: height 250ms, max-height 250ms; box-shadow: 0 -10px 40px rgba(0,0,0,.3); }
 .rv-hoja--completa{ max-height: calc(100vh - 1rem); height: calc(100vh - 1rem); }
 .rv-hoja::backdrop{ background: rgba(0,0,0,.35); }

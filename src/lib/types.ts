@@ -237,13 +237,34 @@ export interface AuditoriaDoc {
 		| "aprobar"
 		| "retirar_aprobacion"
 		| "publicar"
-		| "publicar_sin_aprobar";
+		| "publicar_sin_aprobar"
+		| "restaurar";
 	userId: string | null;
 	collection: string;
 	entryId: string;
 	revisionId: string | null;
 	hash: string | null;
 	detalle?: string | null;
+	fecha: string;
+}
+
+// ─── Versiones (historial de copias) ─────────────────────────────────────────
+
+/** «cambio»: copia del texto antes de cada escritura; «publicacion»: lo que estaba publicado antes de publicar otra cosa. */
+export type TipoVersion = "cambio" | "publicacion";
+
+/** Copia guardada de un documento revisable. Máximo 5 por artículo y por tipo (rotan). */
+export interface VersionDoc {
+	collection: string;
+	entryId: string;
+	tipo: TipoVersion;
+	/** Texto llano para la revisora: «Antes de «Cambiarlo ya»», «Versión publicada hasta el 15 nov»… */
+	motivo: string;
+	doc: DocRevisable;
+	hash: string;
+	/** Quién hizo el cambio que provocó la copia (null si no se sabe). */
+	userId: string | null;
+	nombre: string | null;
 	fecha: string;
 }
 
@@ -491,4 +512,52 @@ export interface AjustesVista {
 	gastoMes: number;
 	mcpUrl: string;
 	modelos: Array<{ id: ModeloId; nombre: string; costeOrientativo: string }>;
+}
+
+// ─── Historial de versiones ──────────────────────────────────────────────────
+
+export interface ResumenVersion {
+	/** Párrafos (y título, extracto o fuentes) que difieren del texto actual. */
+	bloquesDistintos: number;
+	/** Palabras añadidas o quitadas respecto al texto actual. */
+	palabrasDistintas?: number;
+}
+
+export interface VersionVista {
+	id: string;
+	tipo: TipoVersion;
+	motivo: string;
+	fecha: string;
+	nombre: string | null;
+	resumen: ResumenVersion;
+	/** true si la copia es igual que el texto actual. */
+	igualQueActual: boolean;
+}
+
+/**
+ * Una unidad que difiere entre una copia y el texto actual. Los segmentos van
+ * de la copia (`eliminado`: estaba en la copia y ya no está) al texto actual
+ * (`añadido`: está ahora y no estaba en la copia).
+ */
+export interface BloqueComparado {
+	campo: CampoAncla;
+	blockKey: string | null;
+	/** parrafo | titulo | lista | cita | tabla | imagen | otro (o el campo). */
+	tipoBloque: string;
+	estado: "cambiado" | "añadido" | "eliminado";
+	segmentos: SegmentoDiff[];
+	/** El texto es el mismo y solo cambia el formato (negritas, enlaces, estilo…). */
+	soloFormato: boolean;
+}
+
+export interface HistorialVista {
+	cambios: VersionVista[];
+	publicaciones: VersionVista[];
+	actual: { hash: string };
+	publicada: { hash: string } | null;
+}
+
+export interface VersionDetalle {
+	version: VersionVista & { doc: DocRevisable };
+	comparacion: BloqueComparado[];
 }

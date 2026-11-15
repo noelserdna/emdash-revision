@@ -122,7 +122,7 @@ export async function darVeredicto(
 			if (!deshecho) {
 				throw PluginRouteError.conflict("Ya no se puede deshacer: el texto ha cambiado después. Deja un comentario.");
 			}
-			const guardada = await escribirDoc(env, entrada, deshecho);
+			const guardada = await escribirDoc(env, entrada, deshecho, "Antes de deshacer un cambio");
 			doc = guardada.doc;
 			hashNuevo = guardada.hash;
 			await reabrir(env, user, cambio, nota);

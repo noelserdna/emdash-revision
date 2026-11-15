@@ -412,10 +412,11 @@ export async function entregar(
 		completa: t.completa,
 		terminosSensibles: terminosSensibles(ajustes),
 	});
-	const guardada = res.cambios.length ? await escribirDoc(env, entrada, res.doc) : entrada;
-
 	const rev = await leerRevision(ctx, t.collection, t.entryId);
 	const vuelta = rev.vuelta + 1;
+	const guardada = res.cambios.length
+		? await escribirDoc(env, entrada, res.doc, `Antes de la corrección de la IA (vuelta ${vuelta})`)
+		: entrada;
 	const creado = nowIso();
 	const aplicados = new Set<string>();
 	for (const [i, cambio] of res.cambios.entries()) {

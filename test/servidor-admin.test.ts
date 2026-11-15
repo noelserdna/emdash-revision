@@ -121,7 +121,7 @@ describe("permisos", () => {
 		for (const [nombre, ruta] of Object.entries(plugin.routes)) {
 			expect(ruta.permission, nombre).toBe(ADMIN_RUTAS.includes(nombre) ? "plugins:manage" : "plugins:read");
 		}
-		expect(Object.keys(plugin.routes)).toHaveLength(28);
+		expect(Object.keys(plugin.routes)).toHaveLength(31);
 	});
 
 	it("las herramientas MCP apuntan a rutas de administración y solo entregar es destructiva", () => {

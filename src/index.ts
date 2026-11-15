@@ -69,6 +69,7 @@ export function revisionPlugin(options: RevisionPluginOptions): PluginDescriptor
 			"users:read",
 			"email:send",
 			"network:request",
+			"hooks.content-policy:register",
 		],
 		allowedHosts: ["api.anthropic.com"],
 		adminPages: [
