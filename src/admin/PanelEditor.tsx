@@ -40,6 +40,14 @@ const s = {
 	ok: { margin: 0, padding: "0.5rem", borderRadius: 6, background: "rgba(40,140,80,0.12)" } as React.CSSProperties,
 };
 
+/** Los estilos del plugin no se cargan dentro del editor de EmDash: lo mínimo, acotado al panel. */
+const CSS = `
+.rv-panel .rv-sr{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+.rv-panel del{background:light-dark(#fde4e1,#4a1712);color:light-dark(#8f1d12,#ffb4ab);text-decoration:line-through}
+.rv-panel ins{background:light-dark(#ddf4e4,#123b22);color:light-dark(#0f5a2a,#a8f0c0);text-decoration:underline;text-underline-offset:0.18em}
+.rv-panel button:disabled{opacity:0.5;cursor:default}
+`;
+
 function texto(x: PTNode | string | null): string {
 	if (x === null || x === undefined) return "";
 	if (typeof x === "string") return x;
@@ -158,7 +166,8 @@ export function PanelEditor({ collection, entry }: Props) {
 	const aprobacion = vista?.revision.estado === "aprobado" ? vista.revision.aprobacion : null;
 
 	return (
-		<div style={s.caja}>
+		<div className="rv-panel" style={s.caja}>
+			<style>{CSS}</style>
 			<p style={s.tenue}>
 				{aprobacion
 					? `Aprobado por ${aprobacion.nombre} el ${new Date(aprobacion.fecha).toLocaleDateString("es-ES", { day: "numeric", month: "long" })}`
