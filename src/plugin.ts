@@ -28,7 +28,6 @@ import {
 	regenerarGuia,
 	restaurarHistorialGuia,
 	retirarAprendizaje,
-	senalDeEdicion,
 } from "./lib/aprendizaje.js";
 import { darVeredicto, editarBloque, editarCambio } from "./lib/cambios.js";
 import {
@@ -38,18 +37,17 @@ import {
 	crearComentario,
 	editarComentario,
 } from "./lib/comentarios.js";
-import { coleccionConfigurada, leerEntrada, type Entorno } from "./lib/contenido.js";
+import { coleccionConfigurada, type Entorno } from "./lib/contenido.js";
+import { alGuardar, alPublicar, anotarQuienPublica, importarHistorico } from "./lib/editor-nativo.js";
 import {
 	copiaAntesDePublicar,
-	copiaDeEdicionExterna,
-	esEdicionExterna,
 	listarVersiones,
 	restaurarVersion,
 	verVersion,
 } from "./lib/historial.js";
 import { MODELOS } from "./lib/costes.js";
 import { importarPreguntas, responderPregunta } from "./lib/preguntas.js";
-import { leerRevision, purgarEntrada, sincronizar } from "./lib/revisiones.js";
+import { leerRevision, purgarEntrada } from "./lib/revisiones.js";
 import { allRows, collections, nowIso, nuevoId, STORAGE } from "./lib/store.js";
 import {
 	corregirComentarioYa,
@@ -201,6 +199,21 @@ const schemas = {
 	reclamar: z.object({ trabajoId: idSimple.optional() }),
 	trabajoId: z.object({ trabajoId: idSimple }),
 	restaurar: z.object({ id: idSimple, publicar: z.boolean().optional(), confirmar: z.boolean().optional() }),
+	importarEditor: z.object({
+		collection: z.string().min(1).max(100),
+		id: idSimple,
+		sesiones: z
+			.array(
+				z.object({
+					antesRevisionId: idSimple,
+					despuesRevisionId: idSimple,
+					autorId: idSimple,
+					fecha: z.string().min(10).max(40),
+				}),
+			)
+			.max(200),
+		aprobar: z.object({ autorId: idSimple, fecha: z.string().min(10).max(40) }).nullable().optional(),
+	}),
 	entregar: z.object({
 		trabajoId: idSimple,
 		ops: z.array(opSchema).max(2000),
@@ -413,6 +426,7 @@ export function createPlugin(options: RevisionPluginOptions): ResolvedPlugin {
 		),
 
 		// ── Aprendizaje: la guía que aprende de la revisora ──
+		"editor/importar": adminRoute(schemas.importarEditor, async (ctx) => importarHistorico(entorno(ctx), ctx.input)),
 		"aprendizaje/estado": adminRoute(schemas.vacio, async (ctx) => estadoAprendizaje(entorno(ctx))),
 		"aprendizaje/actualizar": adminRoute(schemas.vacio, async (ctx) => actualizarAhora(entorno(ctx))),
 		"aprendizaje/retirar": adminRoute(schemas.id, async (ctx) =>
@@ -456,30 +470,24 @@ export function createPlugin(options: RevisionPluginOptions): ResolvedPlugin {
 			"content:afterSave": {
 				timeout: 30_000,
 				errorPolicy: "continue",
-				handler: async (event, ctx) => {
-					if (!coleccionConfigurada(options, event.collection)) return;
-					const id = typeof event.content.id === "string" ? event.content.id : null;
-					if (!id) return;
-					const env = entorno(ctx);
-					const rev = await collections(ctx).revisiones.get(`${event.collection}:${id}`);
-					if (!rev) return;
-					const e = await leerEntrada(env, event.collection, id);
-					// Edición en el editor nativo: copia del estado anterior antes de sincronizar.
-					if (esEdicionExterna(env, event.collection, e.id, rev.hash, e.hash)) {
-						const anterior = await copiaDeEdicionExterna(env, e, rev.hash, event.actor?.id ?? null);
-						// Si la edita una revisora, es una corrección de la que aprender.
-						await senalDeEdicion(env, event.actor, event.collection, e.id, anterior, e.doc);
-					}
-					await sincronizar(env, event.collection, e.id, e.doc, e.hash);
-				},
+				// Edición en el editor de artículos: constancia, cierre de pendientes y aprendizaje.
+				handler: async (event, ctx) => alGuardar(entorno(ctx), event),
 			},
 			"content:beforePublish": {
 				// Debe ser rápido (5 s) y no cancelar nunca: solo guarda la copia de lo publicado.
 				timeout: 5_000,
 				errorPolicy: "continue",
 				handler: async (event, ctx) => {
-					await copiaAntesDePublicar(entorno(ctx), event);
+					const env = entorno(ctx);
+					await copiaAntesDePublicar(env, event);
+					await anotarQuienPublica(env, event);
 				},
+			},
+			"content:afterPublish": {
+				// Publicar desde el editor siendo revisora es aprobar (y fija la fecha de revisión).
+				timeout: 30_000,
+				errorPolicy: "continue",
+				handler: async (event, ctx) => alPublicar(entorno(ctx), event),
 			},
 			"content:afterDelete": {
 				timeout: 60_000,

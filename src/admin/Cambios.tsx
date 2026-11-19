@@ -136,6 +136,12 @@ export function TarjetaCambio({ cambio: c, indice, total, comentarios, ocupado, 
 				) : null}
 			</div>
 
+			{(c.origen === "editor" || c.cerradoPor) && c.nota ? (
+				<p className="rv-cambio__origen" style={{ margin: "0 0 0.75rem", fontFamily: "system-ui, sans-serif", fontSize: "0.9375rem", opacity: 0.85 }}>
+					{c.nota}
+				</p>
+			) : null}
+
 			{conAvisos ? (
 				<div style={{ marginBottom: "0.75rem", fontFamily: "system-ui, sans-serif", fontSize: "0.9375rem" }}>
 					<Aviso tono="aviso">

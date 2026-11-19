@@ -226,7 +226,9 @@ export async function copiaDeEdicionExterna(
 		const lista = await content.listRevisions(entrada.collection, entrada.id, { limit: 20 });
 		const i = lista.findIndex((r) => r.id === entrada.draftRevisionId);
 		if (i < 0) return null;
-		const candidatas = lista.slice(i + 1, i + 11);
+		// Sin último texto conocido (artículo que el plugin aún no había visto), solo
+		// vale la revisión inmediatamente anterior: buscar más atrás inventaría cambios.
+		const candidatas = hashAnterior ? lista.slice(i + 1, i + 11) : lista.slice(i + 1, i + 2);
 		let elegida: { doc: ReturnType<typeof docDeDatos>; hash: string } | null = null;
 		for (const r of candidatas) {
 			let data = r.data;

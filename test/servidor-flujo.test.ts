@@ -201,8 +201,10 @@ describe("flujo completo", () => {
 		});
 		mundo.content.editar("posts", "p2", { content: (datosEjemplo().content as Array<{ _key: string }>).filter((b) => b._key !== "b3") });
 		await hook("content:afterSave", mundo, { content: { id: "p2" }, collection: "posts", isNew: false });
+		// Borrar en el editor el párrafo comentado lo da por resuelto.
 		const v2 = await llamar<ArticuloVista>(mundo, EDITORA, "articulo/get", art2);
-		expect(v2.comentarios[0]?.huerfano).toBe(true);
+		expect(v2.comentarios[0]?.estado).toBe("aplicado");
+		expect(v2.comentarios[0]?.respuestaIA).toMatch(/al editar el artículo en el editor/);
 	});
 
 	it("una escritura propia no degrada la aprobación", async () => {

@@ -245,7 +245,8 @@ export interface AuditoriaDoc {
 		| "publicar"
 		| "publicar_sin_aprobar"
 		| "restaurar"
-		| "aprender";
+		| "aprender"
+		| "editar_fuera";
 	userId: string | null;
 	collection: string;
 	entryId: string;
@@ -357,6 +358,12 @@ export interface CambioDoc {
 	nota?: string | null;
 	veredictoPor?: string | null;
 	creado: string;
+	/** «editor»: edición hecha en el editor de artículos de EmDash, no por la IA. */
+	origen?: "editor";
+	/** Sesión de edición en el editor a la que pertenece (para actualizarla en vez de duplicarla). */
+	sesion?: string;
+	/** Cambio de la IA que se cerró sin veredicto propio: al editar ese bloque en el editor o al publicar. */
+	cerradoPor?: "editor" | "publicar";
 }
 
 export interface OpRechazada {

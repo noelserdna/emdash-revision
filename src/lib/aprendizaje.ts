@@ -132,6 +132,8 @@ export interface NuevaSenal {
 	nota?: string | null;
 	general?: boolean;
 	ref?: string | null;
+	/** Para señales de algo que ocurrió antes (importaciones); por defecto, ahora. */
+	fecha?: string;
 }
 
 /**
@@ -161,18 +163,19 @@ export async function registrarSenal(env: Entorno, autor: Autor | null | undefin
 			nota: recortar(s.nota),
 			general: !!s.general,
 			ref: s.ref ?? null,
-			fecha: nowIso(),
+			fecha: s.fecha ?? nowIso(),
 			procesada: false,
 		};
 		// «Cambiarlo ya» tras crear el comentario: es la misma acción, se completa la señal.
 		let id: string | null = null;
-		if (s.ref && s.tipo === "cambiar_ya") {
+		// Una sesión en el editor de artículos: cada guardado actualiza la misma señal.
+		if (s.ref && (s.tipo === "cambiar_ya" || s.tipo === "edicion")) {
 			const previas = await allRows(senales, { where: { entryId: s.entryId } }, 500);
 			const previa = previas.find((r) => r.data.ref === s.ref && !r.data.procesada && r.data.collection === s.collection);
 			if (previa) {
 				id = previa.id;
 				doc.general = doc.general || previa.data.general;
-				doc.fecha = previa.data.fecha;
+				if (s.tipo === "cambiar_ya") doc.fecha = previa.data.fecha;
 			}
 		}
 		id ??= nuevoId();
@@ -182,6 +185,18 @@ export async function registrarSenal(env: Entorno, autor: Autor | null | undefin
 	} catch (error) {
 		ctx.log.warn("[aprendizaje] no se pudo registrar la señal", { error: String(error) });
 		return null;
+	}
+}
+
+/** Borra la señal sin procesar de una sesión (si al final no cambió nada de texto). Nunca lanza. */
+export async function borrarSenalPendiente(env: Entorno, ref: string): Promise<void> {
+	try {
+		const { senales } = collections(env.ctx);
+		const pendientes = await allRows(senales, { where: { procesada: false } }, 2000);
+		const ids = pendientes.filter((r) => r.data.ref === ref).map((r) => r.id);
+		if (ids.length) await senales.deleteMany(ids);
+	} catch (error) {
+		env.ctx.log.warn("[aprendizaje] no se pudo borrar la señal", { error: String(error) });
 	}
 }
 

@@ -39,6 +39,8 @@ export interface NuevaVersion {
 	hash?: string;
 	userId?: string | null;
 	nombre?: string | null;
+	/** Para copias de algo que ocurrió antes (importaciones); por defecto, ahora. */
+	fecha?: string;
 }
 
 /** Copias de un artículo y un tipo, de la más reciente a la más antigua. */
@@ -64,7 +66,8 @@ export async function guardarVersion(ctx: PluginContext, v: NuevaVersion): Promi
 
 	// Fechas estrictamente crecientes: dos copias en el mismo milisegundo deben ordenarse bien.
 	let fecha = new Date();
-	if (ultima) {
+	if (v.fecha && Number.isFinite(Date.parse(v.fecha))) fecha = new Date(v.fecha);
+	else if (ultima) {
 		const t = Date.parse(ultima.data.fecha);
 		if (Number.isFinite(t) && t >= fecha.getTime()) fecha = new Date(t + 1);
 	}

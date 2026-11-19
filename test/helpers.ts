@@ -440,7 +440,7 @@ export function makePlugin(opciones: RevisionPluginOptions = OPCIONES) {
 		return (await route.handler(makeCtx(mundo, user, parsed))) as T;
 	}
 	async function hook(
-		nombre: "content:afterSave" | "content:afterDelete" | "content:beforePublish" | "cron",
+		nombre: "content:afterSave" | "content:afterDelete" | "content:beforePublish" | "content:afterPublish" | "cron",
 		mundo: Mundo,
 		event: unknown,
 	): Promise<unknown> {
