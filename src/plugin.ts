@@ -323,6 +323,20 @@ export function createPlugin(options: RevisionPluginOptions): ResolvedPlugin {
 		"cambios/veredicto": memberRoute(schemas.veredicto, async (ctx) =>
 			darVeredicto(entorno(ctx), requireUser(ctx), ctx.input),
 		),
+		// Panel del editor de artículos: lo que pide la revisora es un comentario general
+		// que la IA corrige en el momento (queda en «cambios por ver», como siempre).
+		"editor/pedir": memberRoute(ref.extend({ texto: z.string().min(1).max(4000) }), async (ctx) => {
+			const env = entorno(ctx);
+			const user = requireUser(ctx);
+			const { comentario } = await crearComentario(env, user, {
+				collection: ctx.input.collection,
+				id: ctx.input.id,
+				texto: ctx.input.texto,
+				ancla: null,
+			});
+			const r = await corregirComentarioYa(env, user, comentario.id);
+			return articulo(env, user, r.collection, r.entryId);
+		}),
 		"comentarios/corregir": memberRoute(schemas.id, async (ctx) => {
 			const env = entorno(ctx);
 			const user = requireUser(ctx);

@@ -240,7 +240,7 @@ function comentariosParaIA(coms: Array<{ id: string; data: ComentarioDoc }>, sol
 		});
 }
 
-function textoRespuesta(r: RespuestaPregunta): string {
+export function textoRespuesta(r: RespuestaPregunta): string {
 	switch (r.tipo) {
 		case "correcto":
 			return r.texto ? `Es correcto. ${r.texto}` : "Es correcto: no hay que cambiarlo.";

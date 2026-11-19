@@ -13,8 +13,8 @@ vi.mock("../src/lib/motor-api.js", async (orig) => ({
 		return {
 			salida: {
 				ops: entrada.comentarios
-					.filter((c) => c.blockKey)
-					.map((c) => ({ op: "reemplazar", blockKey: c.blockKey, markdown: `Corregido por la IA (${c.texto}).`, comentarioIds: [c.id] })),
+					.filter((c) => c.blockKey || c.campo === "general")
+					.map((c) => ({ op: "reemplazar", blockKey: c.blockKey ?? "b1", markdown: `Corregido por la IA (${c.texto}).`, comentarioIds: [c.id] })),
 				resoluciones: entrada.comentarios.map((c) => ({ comentarioId: c.id, accion: "aplicado", nota: "Hecho." })),
 			},
 			usage: null,
@@ -86,5 +86,13 @@ describe("corrección al momento y edición directa", () => {
 		const cambio = v.cambios.find((c) => c.blockKey === "b1")!;
 		expect(cambio.veredicto).toBe("bien");
 		expect(v.cambios.filter((c) => c.blockKey === "b1")).toHaveLength(1);
+	});
+
+	it("el panel del editor convierte lo que pide en un comentario general corregido al momento", async () => {
+		const v = await llamar<ArticuloVista>(mundo, EDITORA, "editor/pedir", { ...ART, texto: "simplifica el principio" });
+		expect(pedidos[0]!.comentarios).toEqual([expect.objectContaining({ campo: "general", texto: "simplifica el principio" })]);
+		expect(v.revision.estado).toBe("cambios_por_ver");
+		expect(v.cambios.filter((c) => c.veredicto === "pendiente")).toHaveLength(1);
+		expect(texto(v, "b1")).toBe("Corregido por la IA (simplifica el principio).");
 	});
 });
